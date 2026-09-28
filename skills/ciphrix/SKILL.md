@@ -163,6 +163,7 @@ The command surface is discoverable and always current — don't memorise or inf
 - `ciphrix --help` — the resources and verbs.
 - `ciphrix <resource> --help` — flags for a resource.
 - `ciphrix <resource> <verb> --help` — exact arguments and write semantics.
+- [`references/commands.md`](references/commands.md) — generated command and option reference for offline discovery; live help from the installed CLI remains authoritative.
 
 If the CLI does not expose the requested capability, say so. Do not call private endpoints, reproduce
 backend logic, or invent a command from this guide.

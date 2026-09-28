@@ -9,6 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A generated agent command reference under `skills/ciphrix/references/commands.md`, with a CI drift check against the Commander command tree and help output.
 - `ciphrix login` opens the verification link in the default browser when possible; `--no-open` keeps the flow headless. Device-code polling now uses RFC 8628 defaults, waits the advertised interval before each poll, bounds timing values, and increases the delay after `slow_down`.
 - `ciphrix login` / `ciphrix logout` using device authorization (RFC 8628). `login` prints a single link with
   the code embedded; credentials are stored in the OS keychain by default, with explicit opt-in file
@@ -24,6 +25,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Clean builds now preserve the executable mode of the `ciphrix` entry point, including for local
+  `npm link` usage and published package artifacts.
 - API calls now time out after 30 seconds, response bodies are capped at 10 MiB, and local evidence
   uploads are limited to regular files of at most 50 MiB before they are read into memory.
 - The canonical public npm package is now `@ciphrix/cli`; the installed executable remains `ciphrix`.

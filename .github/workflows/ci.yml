@@ -35,6 +35,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - name: Check generated command reference
+        run: npm run commands:check
       - name: Tool contract test
         run: npm run test:contract --if-present
 

@@ -46,6 +46,10 @@ Every resource is addressed by a **name or a stable code** (for example `ACME-DO
 Run `ciphrix <resource> --help` for the verbs of a resource, and `ciphrix <resource> <verb> --help` for the
 flags of one command.
 
+The complete generated command reference, including options and write-behavior notes, is available at
+[`skills/ciphrix/references/commands.md`](skills/ciphrix/references/commands.md). The live help output of
+the installed version remains authoritative.
+
 | Command                                                                                     | Description                                                                                                             |
 | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `ciphrix login [url]`                                                                       | Sign in with device authorization; opens the link by default (`--no-open` skips it). `--device-name` labels the device. |

@@ -105,8 +105,9 @@ changes to command semantics.
   private implementation details, internal operational knowledge, hidden endpoints, customer examples or
   unreleased capabilities.
 - Keep the skill useful across agent harnesses. Do not depend on one vendor's proprietary prompt syntax,
-  tools or filesystem layout. Exact command syntax must come from `ciphrix --help`, not a duplicated command
-  catalogue in the skill.
+  tools or filesystem layout. Exact command syntax must come from `ciphrix --help`, not a hand-maintained
+  command catalogue in the skill. The linked `references/commands.md` is generated from Commander help and
+  checked for drift in CI.
 - Keep the frontmatter description discriminating because agent harnesses use it for activation. Keep the
   body focused on non-obvious domain relationships, decision principles, authority boundaries and reusable
   workflows.
@@ -129,6 +130,7 @@ changes to command semantics.
   named `feat/`, `fix/`, `docs/`, `chore/`; CI and one approval required.
 - Conventional commits; update `CHANGELOG.md` for user-visible changes.
 - Run before opening a PR: `npm run format:check && npm run lint && npm run typecheck && npm test && npm run build`.
+- After building, run `npm run commands:check` to ensure the generated agent command reference matches current Commander help output.
 - Changes to authentication, credential storage, command grammar or output format need an explicit
   review sign-off.
 
