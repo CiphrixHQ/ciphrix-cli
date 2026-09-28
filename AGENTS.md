@@ -92,6 +92,30 @@ All items are required before changing repository visibility or publishing a rel
 - Keep bounded request deadlines, response buffering and local upload sizes. Uploads must refuse
   symbolic links and special files before reading or transmitting data.
 
+## Public agent skill
+
+`skills/ciphrix/SKILL.md` is a public product interface. It teaches third-party agent harnesses both the
+Ciphrix domain model and how Ciphrix expects an agent to behave. Treat changes to it with the same care as
+changes to command semantics.
+
+- Preserve the product worldview: compliance is a living model of the organization; evidence is distinct
+  from assertion; AI assists but does not make formal human decisions; authorization and API responses are
+  authoritative.
+- Include only public product concepts and behaviour observable through the released CLI. Never disclose
+  private implementation details, internal operational knowledge, hidden endpoints, customer examples or
+  unreleased capabilities.
+- Keep the skill useful across agent harnesses. Do not depend on one vendor's proprietary prompt syntax,
+  tools or filesystem layout. Exact command syntax must come from `ciphrix --help`, not a duplicated command
+  catalogue in the skill.
+- Keep the frontmatter description discriminating because agent harnesses use it for activation. Keep the
+  body focused on non-obvious domain relationships, decision principles, authority boundaries and reusable
+  workflows.
+- When CLI nouns, lifecycle rules, confirmation behaviour, authentication, or security defaults change,
+  review the skill and the README agent-installation section in the same pull request.
+- Validate the skill frontmatter and test discovery with the current Skills CLI before release. Publishing
+  the npm executable must never run a postinstall hook that writes into agent configuration directories;
+  skill installation is an explicit, separate user action.
+
 ## Code conventions
 
 - TypeScript strict, ESM, single quotes, 2-space indentation, ~100 columns (Prettier).

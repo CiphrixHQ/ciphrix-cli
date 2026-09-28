@@ -83,11 +83,26 @@ Add `--json` to any command for machine-readable output. Decoration never appear
 ## For agents
 
 The Ciphrix **skill** lives at [`skills/ciphrix/SKILL.md`](skills/ciphrix/SKILL.md). It is a short operating
-guide for an agent driving the CLI: what the platform is, how its nouns relate, and the patterns to follow.
-It deliberately does not restate the command surface — `ciphrix --help` is always current, a skill is not.
+guide for an agent driving the CLI: the platform's domain model, operating principles, authority boundaries
+and reliable work patterns. It deliberately does not restate the complete command surface —
+`ciphrix --help` is always current, while a skill explains how to reason about the work.
 
-`ciphrix skills` (installing the skill into an agent workspace) is planned; until then, point your agent at
-that file.
+Install it with the open [Skills CLI](https://skills.sh/docs/cli) after this repository is public:
+
+```bash
+# Interactive: select the detected agents and installation scope
+npx skills add CiphrixHQ/ciphrix-cli --skill ciphrix
+
+# Install globally for specific agents
+npx skills add CiphrixHQ/ciphrix-cli --skill ciphrix -g -a codex -a claude-code -a cursor
+
+# Install globally for every supported agent detected by the Skills CLI
+npx skills add CiphrixHQ/ciphrix-cli --skill ciphrix -g --agent '*'
+```
+
+Installing the executable and installing the skill are intentionally separate. The npm package provides
+the `ciphrix` command; the skill teaches Codex, Claude Code, Cursor and other compatible agents how to use
+that command responsibly. The npm installer never modifies agent configuration directories.
 
 ## Configuration
 

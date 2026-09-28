@@ -11,7 +11,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `ciphrix login` opens the verification link in the default browser when possible; `--no-open` keeps the flow headless. Device-code polling now uses RFC 8628 defaults, waits the advertised interval before each poll, bounds timing values, and increases the delay after `slow_down`.
 - `ciphrix login` / `ciphrix logout` using device authorization (RFC 8628). `login` prints a single link with
-  the code embedded; credentials are stored in the OS keychain with a `0600` file fallback.
+  the code embedded; credentials are stored in the OS keychain by default, with explicit opt-in file
+  storage for local and headless testing.
+- A public `ciphrix` agent skill, installable from the repository with the Skills CLI, describing the
+  platform domain model, operating principles, authority boundaries and reliable CLI workflows.
 - `ciphrix policy read <policyId>` — print a policy as Markdown.
 - `ciphrix risk update <riskId> --status <status>` — change a risk status, with an interactive
   confirmation step (`--yes` to skip).

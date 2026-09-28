@@ -1,6 +1,6 @@
 ---
 name: ciphrix
-description: Operate a Ciphrix compliance programme from the terminal with the `ciphrix` CLI — reading and changing context, documents (the Document Library), frameworks, tests and evidence, risks, vendors, assets and monitoring checks, and attaching files to test runs. Use when a task involves a Ciphrix tenant's compliance data, evidence, documents, risks, vendors, assets or tests.
+description: Operate a Ciphrix compliance programme with the `ciphrix` CLI. Use when an agent needs to understand or change a tenant's business context, documents, frameworks, controls, tests and evidence, risks, vendors, assets, monitoring checks, or background jobs.
 ---
 
 # Ciphrix
@@ -13,6 +13,33 @@ judging relevance — but every formal decision stays with a human.
 
 You are operating that programme through `ciphrix`. You resolve things by **name or code**, you act on
 **intents**, and you report what actually happened — including when nothing did.
+
+## Operating stance
+
+Ciphrix treats compliance as a living model of how an organization operates, not a checklist assembled
+for an audit. Context explains the organization; documents state how it intends to operate; frameworks,
+clauses and controls express obligations and design; tests ask whether those claims hold; evidence and
+monitoring show what actually happened; risks, vendors and assets connect that assurance to the real
+business. Preserve those relationships when you work.
+
+Apply these principles:
+
+- **Reality before paperwork.** Start from the organization's actual context and current records. Do not
+  manufacture a polished compliance story that is unsupported by the system.
+- **Evidence before assertion.** Treat evidence, monitoring results and recorded decisions as distinct
+  facts. A document saying that a control exists is not proof that it operated, and an AI assessment is
+  not a human decision.
+- **Assistance without invented authority.** Help people understand, draft, organise and execute their
+  intent. Do not approve, attest, accept risk, record a test result or make another formal decision unless
+  the user clearly asked for that decision.
+- **The API is the source of truth.** Never infer access, state or success from expectations. Report the
+  result returned by Ciphrix, preserve distinctions such as `not found`, `not permitted`, `pending` and
+  `not assessed`, and never work around authorization.
+- **Small, attributable changes.** Read the relevant record before changing it, update only the requested
+  fields, and report the resulting state. Do not turn a narrow request into broad programme cleanup.
+- **Human-readable by default, structured when needed.** Use normal output when working with a person.
+  Use `--json` when exact fields, pagination or reliable machine processing matter; do not scrape
+  decorated terminal output.
 
 ## How the platform is organised
 
@@ -61,7 +88,8 @@ Two consequences worth internalising:
 - **Ask only for decisions.** Only actions that change something a person should review stop for
   confirmation — deleting, editing content, linking, or changing a control, clause, test or asset. A
   formal decision is its own verb (`approve`, `submit`, `test run result`) and applies directly. Everything
-  else just happens.
+  else just happens. Use `--yes` only when the user has already authorised that exact change; it removes
+  an interactive prompt, not the need for authority.
 - **Async work returns a job id.** Attaching evidence or starting AI work returns a job id immediately and
   does not block; report the id and let the user track it with `ciphrix job status`.
 - **Rich text is Markdown.** Document content and descriptions come back as Markdown, and you supply
@@ -81,6 +109,8 @@ everything downstream depends on it.
 **Change a document.** Read it, decide whether the change is **content** or **metadata**, and act
 accordingly. If the document is approved, you must open a new version first — editing an approved document
 is refused by design. Publishing and approving are formal, separate steps; don't fold them into the edit.
+When drafting content, preserve the user's intended policy position and clearly separate current practice
+from proposals or future commitments.
 
 **Attach evidence to a test.** Find the test, then attach in one step with a local file
 (`test attach "<test>" --file <path>`). The command stages the file and attaches it; you do not need to
@@ -110,12 +140,21 @@ are what a check raised. `check disable` silences a check for the tenant — rec
 
 ## Guardrails
 
+- Work only in the tenant and API environment the authenticated user selected. Never discover or switch
+  tenants, endpoints or credential stores by guessing.
+- Do not expose access tokens, stored credentials or sensitive response data in prose, logs or commands.
+  Prefer the OS keychain. File-based credential storage and plaintext HTTP are explicit local/testing
+  opt-ins, never defaults.
+- Do not retry denied actions through another command, weaken authorization, or reinterpret an access
+  failure as a missing record.
 - Don't edit an approved document; create a new version.
 - Don't treat `pending` as a failure or as "done".
 - Don't invent AI assessments. If it isn't evaluated, say so.
 - Don't guess when a name is ambiguous — the CLI lists the candidates and stops; take that as your answer
   and ask the user.
 - Don't stage a file and then attach it when a single attach-with-file command exists.
+- Before a consequential write, make sure the target resolved to the intended record. After the write,
+  report the server's outcome rather than claiming success from the command exit alone.
 
 ## Finding exact syntax
 
@@ -123,3 +162,7 @@ The command surface is discoverable and always current — don't memorise or inf
 
 - `ciphrix --help` — the resources and verbs.
 - `ciphrix <resource> --help` — flags for a resource.
+- `ciphrix <resource> <verb> --help` — exact arguments and write semantics.
+
+If the CLI does not expose the requested capability, say so. Do not call private endpoints, reproduce
+backend logic, or invent a command from this guide.
