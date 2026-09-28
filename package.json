@@ -1,0 +1,66 @@
+{
+  "name": "ciphrix-cli",
+  "version": "0.1.0",
+  "description": "Official command-line interface for the Ciphrix compliance platform.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "bin": {
+    "ciphrix": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "packageManager": "npm@11.19.1",
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepack": "npm run build",
+    "audit:render": "node scripts/render-audit.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CiphrixHQ/ciphrix-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CiphrixHQ/ciphrix-cli/issues"
+  },
+  "homepage": "https://github.com/CiphrixHQ/ciphrix-cli#readme",
+  "keywords": [
+    "ciphrix",
+    "compliance",
+    "cli",
+    "security"
+  ],
+  "dependencies": {
+    "@napi-rs/keyring": "^2.1.0",
+    "commander": "^15.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.2",
+    "eslint": "^10.11.0",
+    "prettier": "^3.9.8",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^5.0.1"
+  }
+}

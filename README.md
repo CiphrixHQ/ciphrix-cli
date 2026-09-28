@@ -1,0 +1,109 @@
+# ciphrix-cli
+
+The official command-line interface for the [Ciphrix](https://ciphrix.com) compliance platform.
+
+`ciphrix` lets you read and act on your compliance data from a terminal or an agent workspace: sign in
+with your Ciphrix account, read a document as Markdown, attach evidence to a test, and update an asset or
+a risk.
+
+> **Status: pre-release (0.1.0).** The command surface is being built module by module.
+
+## Requirements
+
+- Node.js 20.19 or newer (see `.nvmrc` for the recommended version).
+
+## Install
+
+```bash
+npm install --global ciphrix-cli
+# or run without installing
+npx ciphrix-cli --help
+```
+
+## Quickstart
+
+```bash
+# Sign in with device authorization — prints a link that already contains the code
+ciphrix login
+
+# See what documents exist, then read one as Markdown
+ciphrix document list
+ciphrix document get "Access Control Policy"
+
+# What a test covers, and what it is measured against
+ciphrix test links "MFA enforced"
+
+# Record a result (a formal decision)
+ciphrix test run result "MFA enforced" --status passing --note "rolled out org-wide"
+```
+
+## Commands
+
+Every resource is addressed by a **name or a stable code** (for example `ACME-DOC-A1B2`), never a UUID.
+Run `ciphrix <resource> --help` for the verbs of a resource, and `ciphrix <resource> <verb> --help` for the
+flags of one command.
+
+| Command                                                                                     | Description                                                                               |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `ciphrix login [url]`                                                                       | Sign in with device authorization. `--device-name` labels the device.                     |
+| `ciphrix logout`                                                                            | Sign out and remove the stored credential.                                                |
+| `ciphrix context get <business\|operating>` · `context status`                              | A context digest as Markdown; completion and unanswered questions.                        |
+| `ciphrix context set <question> <value>` · `context reset`                                  | Answer one question; reset the Business context (asks to confirm).                        |
+| `ciphrix document list` · `get` · `versions`                                                | The **Document Library**: list, read as Markdown, version history.                        |
+| `ciphrix document update` · `edit` · `version` · `submit` · `approve` · `create` · `delete` | Change metadata or content, open a new version, move it through review, create or delete. |
+| `ciphrix test list` · `get` · `runs` · `items`                                              | Tests, their runs, and the items attached to a run.                                       |
+| `ciphrix test available` · `links`                                                          | Items available to attach; the controls and clauses a test covers.                        |
+| `ciphrix test attach` · `update` · `delete`                                                 | Attach evidence (returns a job id), change ownership or frequency, delete a custom test.  |
+| `ciphrix test run create` · `run result` · `run delete`                                     | Create a run, record a result (a formal decision), delete a run.                          |
+| `ciphrix framework list`                                                                    | Applied frameworks, plus what is available to add.                                        |
+| `ciphrix framework clauses` · `clause` · `items` · `available`                              | A framework's clauses, one clause, and its items.                                         |
+| `ciphrix framework update` · `link`                                                         | Clause applicability and design requirements; map a test or document to a clause.         |
+| `ciphrix control list` · `get` · `items` · `available`                                      | Controls with status, applicability and owner; one control; what is mapped to it.         |
+| `ciphrix control update` · `link`                                                           | Owner, applicability, design requirements and notes; map a test or document.              |
+| `ciphrix asset list` · `get` · `create` · `update` · `delete`                               | The asset register.                                                                       |
+| `ciphrix asset links` · `tags` · `tag`                                                      | What an asset is mapped to; its key/value tags.                                           |
+| `ciphrix vendor list` · `get` · `create` · `update` · `delete`                              | The vendor register.                                                                      |
+| `ciphrix vendor files` · `attach` · `detach`                                                | Files attached to a vendor.                                                               |
+| `ciphrix risk list` · `get` · `create` · `update` · `delete`                                | The risk register.                                                                        |
+| `ciphrix risk treatment` · `scores` · `controls` · `link` · `files` · `attach` · `detach`   | Treatment, scores, linked controls and files.                                             |
+| `ciphrix check list` · `resources` · `run` · `runs` · `findings` · `integrations`           | Monitoring checks, their runs and findings.                                               |
+| `ciphrix check enable` · `disable`                                                          | Turn a check on or off for this tenant.                                                   |
+| `ciphrix job status <jobId>`                                                                | Check a background job started by another command (for example an evidence attachment).   |
+
+Writes that change something a person should look at — deleting, linking, editing content, and changes
+to a control, clause, test or asset — show the proposed change and ask you to confirm. Add `--yes` to skip
+the prompt in a script. Plain field updates (`risk update`, `vendor update`, `document update`) apply
+directly.
+
+Add `--json` to any command for machine-readable output. Decoration never appears in JSON output.
+
+## For agents
+
+The Ciphrix **skill** lives at [`skills/ciphrix/SKILL.md`](skills/ciphrix/SKILL.md). It is a short operating
+guide for an agent driving the CLI: what the platform is, how its nouns relate, and the patterns to follow.
+It deliberately does not restate the command surface — `ciphrix --help` is always current, a skill is not.
+
+`ciphrix skills` (installing the skill into an agent workspace) is planned; until then, point your agent at
+that file.
+
+## Configuration
+
+- `CIPHRIX_API_URL` — API base URL. Defaults to the production API; pass `--api-url` (or
+  `ciphrix login <url>`) to target another environment.
+- `CIPHRIX_CREDENTIAL_STORE=file` — force the file credential store instead of the OS keychain
+  (headless environments). Credentials are stored in the OS keychain by default, with a `0600` file
+  fallback.
+- `NO_COLOR` / `FORCE_COLOR` — standard colour controls. Output is never coloured when piped.
+
+## Security
+
+Please do not report security issues in public. See [SECURITY.md](SECURITY.md).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). The repository follows a trunk-based
+workflow: `main` is always releasable, and every change lands through a short-lived pull request.
+
+## License
+
+[Apache-2.0](LICENSE).

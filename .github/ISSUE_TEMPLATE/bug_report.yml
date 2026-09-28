@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a problem with the Ciphrix CLI
+title: '[bug]: '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please **do not** include secrets, tokens, real customer data or internal URLs.
+        For security vulnerabilities, use the private process in [SECURITY.md](https://github.com/CiphrixHQ/ciphrix-cli/security/policy).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `ciphrix ...`
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: CLI version
+      description: Output of `ciphrix --version`.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system and Node.js version.
+      placeholder: 'macOS 15, Node 22.11.0'
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Command output with any secrets redacted.
+      render: shell
+    validations:
+      required: false
