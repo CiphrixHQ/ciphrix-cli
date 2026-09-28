@@ -1,4 +1,4 @@
-# ciphrix-cli
+# Ciphrix CLI
 
 The official command-line interface for the [Ciphrix](https://ciphrix.com) compliance platform.
 
@@ -15,9 +15,9 @@ a risk.
 ## Install
 
 ```bash
-npm install --global ciphrix-cli
+npm install --global @ciphrix/cli
 # or run without installing
-npx ciphrix-cli --help
+npx @ciphrix/cli --help
 ```
 
 ## Quickstart

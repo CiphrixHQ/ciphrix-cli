@@ -20,6 +20,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The canonical public npm package is now `@ciphrix/cli`; the installed executable remains `ciphrix`.
 - `ciphrix logout` now confirms remote revocation before removing a credential, retains it after
   transient failures for retry, and offers `--local-only` for explicit device-only removal.
 - API requests and uploads now require HTTPS unless the caller explicitly enables plaintext HTTP for

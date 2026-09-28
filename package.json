@@ -1,5 +1,5 @@
 {
-  "name": "ciphrix-cli",
+  "name": "@ciphrix/cli",
   "version": "0.1.0",
   "description": "Official command-line interface for the Ciphrix compliance platform.",
   "type": "module",
