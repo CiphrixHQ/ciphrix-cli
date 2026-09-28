@@ -9,6 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `ciphrix login` opens the verification link in the default browser when possible; `--no-open` keeps the flow headless. Device-code polling now uses RFC 8628 defaults, waits the advertised interval before each poll, bounds timing values, and increases the delay after `slow_down`.
 - `ciphrix login` / `ciphrix logout` using device authorization (RFC 8628). `login` prints a single link with
   the code embedded; credentials are stored in the OS keychain with a `0600` file fallback.
 - `ciphrix policy read <policyId>` — print a policy as Markdown.
@@ -20,6 +21,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- API calls now time out after 30 seconds, response bodies are capped at 10 MiB, and local evidence
+  uploads are limited to regular files of at most 50 MiB before they are read into memory.
 - The canonical public npm package is now `@ciphrix/cli`; the installed executable remains `ciphrix`.
 - `ciphrix logout` now confirms remote revocation before removing a credential, retains it after
   transient failures for retry, and offers `--local-only` for explicit device-only removal.

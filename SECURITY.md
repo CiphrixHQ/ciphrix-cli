@@ -49,3 +49,5 @@ The project is pre-release. Once `1.0.0` ships, the latest minor release line re
 - The CLI does not follow HTTP redirects for authenticated API calls or uploads. Configure the final
   endpoint directly so credentials and uploaded files cannot be forwarded to another origin or over
   downgraded transport.
+- API requests have a 30-second deadline and response bodies are capped at 10 MiB. Evidence uploads
+  are limited to regular, non-symbolic-link files of at most 50 MiB, checked before the file is read.

@@ -154,11 +154,17 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .description('Sign in to Ciphrix with device authorization')
     .option('--api-url <url>', 'API base URL')
     .option('--device-name <name>', 'a name for this device (defaults to the machine name)')
+    .option('--no-open', 'do not open the verification link in a browser')
     .action(async (url: string | undefined, options: unknown) => {
       await loginCommand({
         io,
         apiUrl: apiUrlOf(url, options),
         deviceName: readStringOption(options, 'deviceName'),
+        noOpen:
+          readBooleanOption(options, 'noOpen') ||
+          (options !== null &&
+            typeof options === 'object' &&
+            (options as Record<string, unknown>).open === false),
       });
     });
 

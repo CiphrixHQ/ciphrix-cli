@@ -89,6 +89,8 @@ All items are required before changing repository visibility or publishing a rel
   redirect, server, or other uncertain failures, retain the credential and give retry guidance; only
   clear it on confirmed revocation or a definitive invalid-session response. `logout --local-only` is
   the explicit opt-in to remove the local copy without revoking the remote session and must say so.
+- Keep bounded request deadlines, response buffering and local upload sizes. Uploads must refuse
+  symbolic links and special files before reading or transmitting data.
 
 ## Code conventions
 

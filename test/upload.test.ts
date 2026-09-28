@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -94,6 +94,84 @@ describe('uploadLocalFile', () => {
       const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
       expect(init.redirect).toBe('manual');
       expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('rejects an oversized file before making a request', async () => {
+    const { path, cleanup } = await withTempFile('large.txt', '123456');
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      await expect(uploadLocalFile(ctx, path, 'test', { maxUploadBytes: 5 })).rejects.toThrow(
+        'Upload exceeds the 5-byte file size limit',
+      );
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('accepts an upload exactly at the configured size limit', async () => {
+    const { path, cleanup } = await withTempFile('small.txt', '12345');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ status: 'ok', data: { uploadId: 'upload-1' } }), {
+            status: 200,
+          }),
+        ),
+      ),
+    );
+
+    try {
+      await expect(
+        uploadLocalFile(ctx, path, 'test', { maxUploadBytes: 5 }),
+      ).resolves.toMatchObject({ id: 'upload-1', size: 5 });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('rejects directories and symbolic links as upload files', async () => {
+    const { path, cleanup } = await withTempFile('evidence.txt', 'hello');
+    const linkPath = `${path}.link`;
+    await symlink(path, linkPath);
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      await expect(
+        uploadLocalFile(ctx, path.slice(0, path.lastIndexOf('/')), 'test'),
+      ).rejects.toThrow('regular file');
+      await expect(uploadLocalFile(ctx, linkPath, 'test')).rejects.toThrow('regular file');
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      await rm(linkPath, { force: true });
+      await cleanup();
+    }
+  });
+
+  it('applies the request timeout while waiting for the upload response', async () => {
+    const { path, cleanup } = await withTempFile('evidence.txt', 'hello');
+    const fetchMock = vi.fn(
+      (_url: string, init: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init.signal?.addEventListener('abort', () =>
+            reject(new DOMException('Aborted', 'AbortError')),
+          );
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      await expect(uploadLocalFile(ctx, path, 'test', { timeoutMs: 5 })).rejects.toThrow(
+        'Request timed out after 1 seconds.',
+      );
+      expect((fetchMock.mock.calls[0]?.[1] as RequestInit).signal?.aborted).toBe(true);
     } finally {
       await cleanup();
     }

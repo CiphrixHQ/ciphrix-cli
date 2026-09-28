@@ -23,8 +23,11 @@ npx @ciphrix/cli --help
 ## Quickstart
 
 ```bash
-# Sign in with device authorization — prints a link that already contains the code
+# Sign in with device authorization — opens the verification link and prints it with the code
 ciphrix login
+
+# For headless or agent use, print the link without opening a browser
+ciphrix login --no-open
 
 # See what documents exist, then read one as Markdown
 ciphrix document list
@@ -43,32 +46,32 @@ Every resource is addressed by a **name or a stable code** (for example `ACME-DO
 Run `ciphrix <resource> --help` for the verbs of a resource, and `ciphrix <resource> <verb> --help` for the
 flags of one command.
 
-| Command                                                                                     | Description                                                                                                     |
-| ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `ciphrix login [url]`                                                                       | Sign in with device authorization. `--device-name` labels the device.                                           |
-| `ciphrix logout`                                                                            | Revoke the remote session, then remove the stored credential. `--local-only` removes only the local credential. |
-| `ciphrix context get <business\|operating>` · `context status`                              | A context digest as Markdown; completion and unanswered questions.                                              |
-| `ciphrix context set <question> <value>` · `context reset`                                  | Answer one question; reset the Business context (asks to confirm).                                              |
-| `ciphrix document list` · `get` · `versions`                                                | The **Document Library**: list, read as Markdown, version history.                                              |
-| `ciphrix document update` · `edit` · `version` · `submit` · `approve` · `create` · `delete` | Change metadata or content, open a new version, move it through review, create or delete.                       |
-| `ciphrix test list` · `get` · `runs` · `items`                                              | Tests, their runs, and the items attached to a run.                                                             |
-| `ciphrix test available` · `links`                                                          | Items available to attach; the controls and clauses a test covers.                                              |
-| `ciphrix test attach` · `update` · `delete`                                                 | Attach evidence (returns a job id), change ownership or frequency, delete a custom test.                        |
-| `ciphrix test run create` · `run result` · `run delete`                                     | Create a run, record a result (a formal decision), delete a run.                                                |
-| `ciphrix framework list`                                                                    | Applied frameworks, plus what is available to add.                                                              |
-| `ciphrix framework clauses` · `clause` · `items` · `available`                              | A framework's clauses, one clause, and its items.                                                               |
-| `ciphrix framework update` · `link`                                                         | Clause applicability and design requirements; map a test or document to a clause.                               |
-| `ciphrix control list` · `get` · `items` · `available`                                      | Controls with status, applicability and owner; one control; what is mapped to it.                               |
-| `ciphrix control update` · `link`                                                           | Owner, applicability, design requirements and notes; map a test or document.                                    |
-| `ciphrix asset list` · `get` · `create` · `update` · `delete`                               | The asset register.                                                                                             |
-| `ciphrix asset links` · `tags` · `tag`                                                      | What an asset is mapped to; its key/value tags.                                                                 |
-| `ciphrix vendor list` · `get` · `create` · `update` · `delete`                              | The vendor register.                                                                                            |
-| `ciphrix vendor files` · `attach` · `detach`                                                | Files attached to a vendor.                                                                                     |
-| `ciphrix risk list` · `get` · `create` · `update` · `delete`                                | The risk register.                                                                                              |
-| `ciphrix risk treatment` · `scores` · `controls` · `link` · `files` · `attach` · `detach`   | Treatment, scores, linked controls and files.                                                                   |
-| `ciphrix check list` · `resources` · `run` · `runs` · `findings` · `integrations`           | Monitoring checks, their runs and findings.                                                                     |
-| `ciphrix check enable` · `disable`                                                          | Turn a check on or off for this tenant.                                                                         |
-| `ciphrix job status <jobId>`                                                                | Check a background job started by another command (for example an evidence attachment).                         |
+| Command                                                                                     | Description                                                                                                             |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `ciphrix login [url]`                                                                       | Sign in with device authorization; opens the link by default (`--no-open` skips it). `--device-name` labels the device. |
+| `ciphrix logout`                                                                            | Revoke the remote session, then remove the stored credential. `--local-only` removes only the local credential.         |
+| `ciphrix context get <business\|operating>` · `context status`                              | A context digest as Markdown; completion and unanswered questions.                                                      |
+| `ciphrix context set <question> <value>` · `context reset`                                  | Answer one question; reset the Business context (asks to confirm).                                                      |
+| `ciphrix document list` · `get` · `versions`                                                | The **Document Library**: list, read as Markdown, version history.                                                      |
+| `ciphrix document update` · `edit` · `version` · `submit` · `approve` · `create` · `delete` | Change metadata or content, open a new version, move it through review, create or delete.                               |
+| `ciphrix test list` · `get` · `runs` · `items`                                              | Tests, their runs, and the items attached to a run.                                                                     |
+| `ciphrix test available` · `links`                                                          | Items available to attach; the controls and clauses a test covers.                                                      |
+| `ciphrix test attach` · `update` · `delete`                                                 | Attach evidence (returns a job id), change ownership or frequency, delete a custom test.                                |
+| `ciphrix test run create` · `run result` · `run delete`                                     | Create a run, record a result (a formal decision), delete a run.                                                        |
+| `ciphrix framework list`                                                                    | Applied frameworks, plus what is available to add.                                                                      |
+| `ciphrix framework clauses` · `clause` · `items` · `available`                              | A framework's clauses, one clause, and its items.                                                                       |
+| `ciphrix framework update` · `link`                                                         | Clause applicability and design requirements; map a test or document to a clause.                                       |
+| `ciphrix control list` · `get` · `items` · `available`                                      | Controls with status, applicability and owner; one control; what is mapped to it.                                       |
+| `ciphrix control update` · `link`                                                           | Owner, applicability, design requirements and notes; map a test or document.                                            |
+| `ciphrix asset list` · `get` · `create` · `update` · `delete`                               | The asset register.                                                                                                     |
+| `ciphrix asset links` · `tags` · `tag`                                                      | What an asset is mapped to; its key/value tags.                                                                         |
+| `ciphrix vendor list` · `get` · `create` · `update` · `delete`                              | The vendor register.                                                                                                    |
+| `ciphrix vendor files` · `attach` · `detach`                                                | Files attached to a vendor.                                                                                             |
+| `ciphrix risk list` · `get` · `create` · `update` · `delete`                                | The risk register.                                                                                                      |
+| `ciphrix risk treatment` · `scores` · `controls` · `link` · `files` · `attach` · `detach`   | Treatment, scores, linked controls and files.                                                                           |
+| `ciphrix check list` · `resources` · `run` · `runs` · `findings` · `integrations`           | Monitoring checks, their runs and findings.                                                                             |
+| `ciphrix check enable` · `disable`                                                          | Turn a check on or off for this tenant.                                                                                 |
+| `ciphrix job status <jobId>`                                                                | Check a background job started by another command (for example an evidence attachment).                                 |
 
 Writes that change something a person should look at — deleting, linking, editing content, and changes
 to a control, clause, test or asset — show the proposed change and ask you to confirm. Add `--yes` to skip
@@ -106,6 +109,8 @@ that file.
   The remote session remains active; revoke it separately in account session settings. If remote
   revocation fails for a transient reason, `logout` keeps the local credential so you can retry, or
   you can explicitly choose `--local-only`.
+- API calls time out after 30 seconds and response bodies are limited to 10 MiB. Local evidence
+  uploads must be regular files (not symbolic links or special files) and may be at most 50 MiB.
 - `NO_COLOR` / `FORCE_COLOR` — standard colour controls. Output is never coloured when piped.
 
 ## Security

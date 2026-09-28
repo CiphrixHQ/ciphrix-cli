@@ -61,6 +61,13 @@ describe('program', () => {
     expect(program.description()).toBe(CLI_TAGLINE);
   });
 
+  it('documents the headless login option in command help', () => {
+    const { io } = captureIO();
+    const program = createProgram(io);
+    const login = program.commands.find((command) => command.name() === 'login');
+    expect(login?.helpInformation()).toContain('--no-open');
+  });
+
   it('renders the banner with the version', () => {
     const banner = formatBanner(createTheme(false));
     expect(banner).toContain('██████');

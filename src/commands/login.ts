@@ -1,4 +1,5 @@
 import { createApiClient } from '../api.js';
+import { openInBrowser } from '../browser.js';
 import { CLI_CLIENT_ID, resolveApiBaseUrl } from '../config.js';
 import { createCredentialStore, type CredentialStore } from '../credentials.js';
 import { resolveDeviceIdentity } from '../deviceInfo.js';
@@ -10,7 +11,9 @@ export interface LoginOptions {
   apiUrl?: string | undefined;
   clientId?: string | undefined;
   deviceName?: string | undefined;
+  noOpen?: boolean | undefined;
   store?: CredentialStore | undefined;
+  openBrowser?: ((url: string) => Promise<boolean>) | undefined;
 }
 
 export const loginCommand = async ({
@@ -18,7 +21,9 @@ export const loginCommand = async ({
   apiUrl,
   clientId = CLI_CLIENT_ID,
   deviceName,
+  noOpen = false,
   store: injectedStore,
+  openBrowser = openInBrowser,
 }: LoginOptions): Promise<void> => {
   const baseUrl = resolveApiBaseUrl({ flag: apiUrl });
   const client = createApiClient(baseUrl);
@@ -42,6 +47,16 @@ export const loginCommand = async ({
     writeLine(io.stdout, io.theme.dim(`Enter the code ${code.userCode}`));
   }
   writeLine(io.stdout, io.theme.dim('Waiting for approval…'));
+
+  if (!noOpen) {
+    const opened = await openBrowser(link);
+    if (!opened) {
+      writeLine(
+        io.stdout,
+        io.theme.dim('Could not open a browser automatically. Open the link above.'),
+      );
+    }
+  }
 
   const token = await pollForToken({
     client,
