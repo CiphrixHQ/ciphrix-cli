@@ -21,6 +21,17 @@ export interface ApiClient {
   request(path: string, options?: RequestOptions): Promise<unknown>;
 }
 
+/** Never follow redirects for requests that may carry credentials or user data. */
+export const fetchWithoutRedirects = async (url: string, init: RequestInit): Promise<Response> => {
+  const response = await fetch(url, { ...init, redirect: 'manual' });
+  if (response.status >= 300 && response.status < 400) {
+    throw new Error(
+      'The API redirected this request. Redirects are blocked to protect credentials and data; update the API URL to the final HTTPS endpoint.',
+    );
+  }
+  return response;
+};
+
 const errorPayload = (
   data: unknown,
 ): { message: string | undefined; code: string | undefined; details: unknown[] } => {
@@ -103,7 +114,7 @@ export const createApiClient = (baseUrl: string): ApiClient => ({
     const init: RequestInit = { method, headers };
     if (body !== undefined) init.body = JSON.stringify(body);
 
-    const response = await fetch(`${baseUrl}${path}`, init);
+    const response = await fetchWithoutRedirects(`${baseUrl}${path}`, init);
     const text = await response.text();
 
     let data: unknown = null;

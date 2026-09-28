@@ -39,6 +39,10 @@ this repository. When in doubt, leave it out and ask.
 
 - Use generic examples only: `https://api.example.com`, `<policy-id>`, `<your-token>`.
 - Configure the environment through `--api-url` / `CIPHRIX_API_URL`; never hardcode one.
+- Require HTTPS for API URLs by default. Keep `--allow-insecure-http` and
+  `CIPHRIX_ALLOW_INSECURE_HTTP=true` as explicit, documented opt-ins for local/non-production HTTP
+  testing. Validate the URL before resolving identity or credentials, reject userinfo/query/fragment
+  and non-HTTP(S) schemes, and never follow redirects on authenticated requests or uploads.
 - Development and audit scripts must not default to internal, development, loopback, or private-network
   endpoints. Require an explicit `--api-url` / environment value; use a generic placeholder only in
   documentation, never as a working credentialed endpoint.
@@ -78,7 +82,13 @@ All items are required before changing repository visibility or publishing a rel
 - No business logic. No direct domain persistence. Delegate to the HTTP tool surface.
 - Never import or copy API/backend code or a private types package; the manifest is the only contract.
 - Do not hardcode tool names, schemas or endpoints beyond the versioned tool path.
-- Credentials live in the OS keychain, with a documented `0600` file fallback; never print or log tokens.
+- Credentials live in the OS keychain by default; never silently fall back to plaintext storage or print
+  or log tokens. The `CIPHRIX_CREDENTIAL_STORE=file` option is an explicit local/headless testing opt-in
+  and must keep the containing directory at `0700` and the credential file at `0600` where supported.
+- Logout must attempt remote session revocation before removing the local credential. On network,
+  redirect, server, or other uncertain failures, retain the credential and give retry guidance; only
+  clear it on confirmed revocation or a definitive invalid-session response. `logout --local-only` is
+  the explicit opt-in to remove the local copy without revoking the remote session and must say so.
 
 ## Code conventions
 

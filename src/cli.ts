@@ -96,6 +96,7 @@ import {
   checkSetEnabledCommand,
 } from './commands/check.js';
 import { CLI_NAME, CLI_TAGLINE, CLI_VERSION } from './constants.js';
+import { setCliInsecureHttpOptIn } from './config.js';
 import { createDefaultIO, writeBlock, writeLine, type CliIO } from './io.js';
 
 export type { CliIO } from './io.js';
@@ -134,8 +135,19 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .name(CLI_NAME)
     .description(CLI_TAGLINE)
     .version(CLI_VERSION, '-v, --version', 'output the version number')
+    .option(
+      '--allow-insecure-http',
+      'allow plaintext HTTP for intentional local or non-production testing only',
+    )
     .showHelpAfterError()
     .showSuggestionAfterError();
+
+  // This is a root option, so it works before or after the subcommand. Scope its
+  // effect to the action; URL validation still happens before command side effects.
+  program.hook('preAction', (_thisCommand, actionCommand) => {
+    setCliInsecureHttpOptIn(actionCommand.optsWithGlobals().allowInsecureHttp === true);
+  });
+  program.hook('postAction', () => setCliInsecureHttpOptIn(false));
 
   program
     .command('login [url]')
@@ -152,10 +164,15 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
 
   program
     .command('logout')
-    .description('Sign out and remove the stored credential')
+    .description('Revoke the remote session and remove the stored credential')
     .option('--api-url <url>', 'API base URL')
+    .option('--local-only', 'remove the local credential without revoking the remote session')
     .action(async (options: unknown) => {
-      await logoutCommand({ io, apiUrl: readStringOption(options, 'apiUrl') });
+      await logoutCommand({
+        io,
+        apiUrl: readStringOption(options, 'apiUrl'),
+        localOnly: readBooleanOption(options, 'localOnly'),
+      });
     });
 
   const context = program
@@ -1713,5 +1730,7 @@ export const main = async (
     const message = error instanceof Error ? error.message : String(error);
     writeLine(io.stderr, `${io.theme.red('error')} ${message}`);
     return 1;
+  } finally {
+    setCliInsecureHttpOptIn(false);
   }
 };

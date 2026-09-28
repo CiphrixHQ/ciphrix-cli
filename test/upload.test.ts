@@ -77,4 +77,25 @@ describe('uploadLocalFile', () => {
       await cleanup();
     }
   });
+
+  it('blocks upload redirects so evidence and bearer credentials stay on the configured origin', async () => {
+    const { path, cleanup } = await withTempFile('evidence.txt', 'hello');
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
+        new Response(null, { status: 307, headers: { location: 'https://other.example/upload' } }),
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      await expect(uploadLocalFile(ctx, path, 'test')).rejects.toThrow(
+        /Redirects are blocked to protect credentials and data/,
+      );
+      const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      expect(init.redirect).toBe('manual');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      await cleanup();
+    }
+  });
 });

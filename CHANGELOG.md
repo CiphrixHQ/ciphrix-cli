@@ -20,6 +20,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- `ciphrix logout` now confirms remote revocation before removing a credential, retains it after
+  transient failures for retry, and offers `--local-only` for explicit device-only removal.
+- API requests and uploads now require HTTPS unless the caller explicitly enables plaintext HTTP for
+  local/non-production testing with `--allow-insecure-http` or `CIPHRIX_ALLOW_INSECURE_HTTP=true`;
+  URL credentials, query strings, fragments and non-HTTP(S) schemes are rejected, and redirects are
+  blocked to prevent credential or upload forwarding.
+- The CLI now requires an explicit `CIPHRIX_CREDENTIAL_STORE=file` opt-in for local/headless plaintext
+  credential storage; keychain failures no longer silently downgrade to a file.
 - The CLI now talks to the versioned tool surface (`/api/tools/v1`).
 - TypeScript project scaffold (strict compiler settings, build, tests, linting, formatting) and the shared
   terminal output helpers (colour handling, status vocabulary, banner).

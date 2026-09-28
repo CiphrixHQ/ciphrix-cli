@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 
-import { ApiError } from './api.js';
+import { ApiError, fetchWithoutRedirects } from './api.js';
 import { asRecord, type ToolContext } from './toolSurface.js';
 
 const MIME_TYPES: Record<string, string> = {
@@ -44,7 +44,7 @@ export const uploadLocalFile = async (
   form.append('purpose', purpose);
   form.append('file', new Blob([contents], { type: contentTypeFor(filename) }), filename);
 
-  const response = await fetch(`${ctx.baseUrl}/tools/v1/upload_file`, {
+  const response = await fetchWithoutRedirects(`${ctx.baseUrl}/tools/v1/upload_file`, {
     method: 'POST',
     headers: { authorization: `Bearer ${ctx.token}`, 'idempotency-key': randomUUID() },
     body: form,
