@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/CiphrixHQ/ciphrix-cli/main/assets/brand/logo_dark_mode.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/CiphrixHQ/ciphrix-cli/main/assets/brand/logo_light_mode.svg">
-    <img alt="Ciphrix" src="https://raw.githubusercontent.com/CiphrixHQ/ciphrix-cli/main/assets/brand/logo_light_mode.svg" width="360">
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo_dark_mode.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/brand/logo_light_mode.svg">
+    <img alt="Ciphrix" src="assets/brand/logo_light_mode.svg" width="360">
   </picture>
 </p>
 
@@ -37,7 +37,7 @@ Update an existing global installation with `npm install --global @ciphrix/cli@l
 code in the terminal. Your password is never entered into the CLI.
 
 <p align="center">
-  <img alt="Ciphrix CLI help and document library" src="https://raw.githubusercontent.com/CiphrixHQ/ciphrix-cli/main/assets/readme/ciphrix-cli.jpg" width="824">
+  <img alt="Ciphrix CLI help and document library" src="assets/readme/ciphrix-cli.jpg" width="824">
 </p>
 
 ## From question to evidence
@@ -107,7 +107,7 @@ An agent can translate a request into a Ciphrix command, inspect the structured 
 answer in the workspace where the user is already working.
 
 <p align="center">
-  <img alt="An agent uses Ciphrix CLI to inspect the vendor register" src="https://raw.githubusercontent.com/CiphrixHQ/ciphrix-cli/main/assets/readme/pi-harness-1.jpg" width="960">
+  <img alt="An agent uses Ciphrix CLI to inspect the vendor register" src="assets/readme/pi-harness-1.jpg" width="960">
 </p>
 
 ### Work with evidence from ChatGPT
@@ -118,10 +118,10 @@ return it to its intended state, and explain the resulting evidence assessment.
 <table>
   <tr>
     <td width="50%" align="center">
-      <img alt="Reopen a compliance test run and attach evidence from ChatGPT" src="https://raw.githubusercontent.com/CiphrixHQ/ciphrix-cli/main/assets/readme/chatgpt-2.jpg">
+      <img alt="Reopen a compliance test run and attach evidence from ChatGPT" src="assets/readme/chatgpt-2.jpg">
     </td>
     <td width="50%" align="center">
-      <img alt="Review the updated run and evidence relevance in ChatGPT" src="https://raw.githubusercontent.com/CiphrixHQ/ciphrix-cli/main/assets/readme/chatgpt-1.jpg">
+      <img alt="Review the updated run and evidence relevance in ChatGPT" src="assets/readme/chatgpt-1.jpg">
     </td>
   </tr>
   <tr>
