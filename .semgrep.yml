@@ -1,0 +1,45 @@
+rules:
+  - id: ciphrix.node.dynamic-code-evaluation
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: Avoid evaluating dynamically constructed JavaScript.
+    metadata:
+      category: security
+      technology:
+        - node.js
+    patterns:
+      - pattern-either:
+          - pattern: eval(...)
+          - pattern: new Function(...)
+
+  - id: ciphrix.node.shell-command-injection
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: Untrusted input reaches a shell command. Prefer spawn/execFile with fixed executable and argument arrays.
+    metadata:
+      category: security
+      technology:
+        - node.js
+    mode: taint
+    pattern-sources:
+      - pattern: process.argv
+      - pattern: process.env.$KEY
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: exec($CMD, ...)
+              - pattern: execSync($CMD, ...)
+              - pattern: $CP.exec($CMD, ...)
+              - pattern: $CP.execSync($CMD, ...)
+          - focus-metavariable: $CMD
+      - patterns:
+          - pattern-either:
+              - pattern: 'spawn($CMD, ..., { ..., shell: true, ... })'
+              - pattern: 'spawnSync($CMD, ..., { ..., shell: true, ... })'
+              - pattern: '$CP.spawn($CMD, ..., { ..., shell: true, ... })'
+              - pattern: '$CP.spawnSync($CMD, ..., { ..., shell: true, ... })'
+          - focus-metavariable: $CMD

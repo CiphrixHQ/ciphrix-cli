@@ -9,6 +9,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Free CI security gates for high/critical npm dependency advisories and Semgrep OSS static analysis,
+  using committed local rules and no paid GitHub security services.
 - A generated agent command reference under `skills/ciphrix/references/commands.md`, with a CI drift check against the Commander command tree and help output.
 - `ciphrix login` opens the verification link in the default browser when possible; `--no-open` keeps the flow headless. Device-code polling now uses RFC 8628 defaults, waits the advertised interval before each poll, bounds timing values, and increases the delay after `slow_down`.
 - `ciphrix login` / `ciphrix logout` using device authorization (RFC 8628). `login` prints a single link with

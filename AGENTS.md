@@ -129,7 +129,8 @@ changes to command semantics.
 - Trunk-based: `main` is always releasable and protected; changes land through short-lived branches
   named `feat/`, `fix/`, `docs/`, `chore/`; CI and one approval required.
 - Conventional commits; update `CHANGELOG.md` for user-visible changes.
-- Run before opening a PR: `npm run format:check && npm run lint && npm run typecheck && npm test && npm run build`.
+- Run before opening a PR: `npm run ci`, `npm audit --audit-level=high`, and
+  `semgrep scan --config .semgrep.yml --error --metrics=off --oss-only`.
 - After building, run `npm run commands:check` to ensure the generated agent command reference matches current Commander help output.
 - Changes to authentication, credential storage, command grammar or output format need an explicit
   review sign-off.
