@@ -50,4 +50,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.1.0] - unreleased
 
-First pre-release. Authentication and the tool commands are still being built.
+Initial release of the official Ciphrix CLI, including device authorization, structured JSON output,
+the public agent skill, and command groups for compliance context, documents, tests, frameworks,
+controls, assets, vendors, risks, monitoring checks, and background jobs.
