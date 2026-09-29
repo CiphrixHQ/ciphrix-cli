@@ -38,6 +38,14 @@ this repository. When in doubt, leave it out and ask.
 ### Always
 
 - Use generic examples only: `https://api.example.com`, `<policy-id>`, `<your-token>`.
+- Before creating a commit, verify that `git config user.name` and `git config user.email` contain an
+  identity intended for permanent public attribution. Use an approved company address or the contributor's
+  exact verified GitHub `noreply` address; never guess a `noreply` address or expose a personal email by
+  accident. A `noreply` email hides the address, not the contributor: reviews and approvals remain
+  attributable to the public GitHub account that performed them.
+- Treat branch names, commit messages, author metadata, pull-request text and reviews as public content.
+  Correct identity and metadata before pushing. Do not rewrite shared history merely to improve
+  presentation; an authorized rewrite requires renewed scanning of every resulting ref and hosted copy.
 - Configure the environment through `--api-url` / `CIPHRIX_API_URL`; never hardcode one.
 - Require HTTPS for API URLs by default. Keep `--allow-insecure-http` and
   `CIPHRIX_ALLOW_INSECURE_HTTP=true` as explicit, documented opt-ins for local/non-production HTTP
