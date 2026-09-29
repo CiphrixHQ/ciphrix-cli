@@ -36,6 +36,10 @@ Update an existing global installation with `npm install --global @ciphrix/cli@l
 `ciphrix login` opens the Ciphrix authorization page in your browser and prints the same link and device
 code in the terminal. Your password is never entered into the CLI.
 
+<p align="center">
+  <img alt="Ciphrix CLI help and document library" src="https://raw.githubusercontent.com/CiphrixHQ/ciphrix-cli/main/assets/readme/ciphrix-cli.jpg" width="824">
+</p>
+
 ## From question to evidence
 
 ```bash
@@ -96,6 +100,35 @@ is also included in the npm package at [`skills/ciphrix/SKILL.md`](skills/ciphri
 the npm package never modifies an agent's configuration directories.
 
 Run `npx skills update` to update installed skills when a newer version is available.
+
+### Ask in natural language, operate through the CLI
+
+An agent can translate a request into a Ciphrix command, inspect the structured result, and present the
+answer in the workspace where the user is already working.
+
+<p align="center">
+  <img alt="An agent uses Ciphrix CLI to inspect the vendor register" src="https://raw.githubusercontent.com/CiphrixHQ/ciphrix-cli/main/assets/readme/pi-harness-1.jpg" width="960">
+</p>
+
+### Work with evidence from ChatGPT
+
+The same command surface supports multi-step compliance work: inspect a run, reopen it, attach evidence,
+return it to its intended state, and explain the resulting evidence assessment.
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img alt="Reopen a compliance test run and attach evidence from ChatGPT" src="https://raw.githubusercontent.com/CiphrixHQ/ciphrix-cli/main/assets/readme/chatgpt-2.jpg">
+    </td>
+    <td width="50%" align="center">
+      <img alt="Review the updated run and evidence relevance in ChatGPT" src="https://raw.githubusercontent.com/CiphrixHQ/ciphrix-cli/main/assets/readme/chatgpt-1.jpg">
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Reopen the run and attach new evidence</sub></td>
+    <td align="center"><sub>Confirm the result and understand evidence relevance</sub></td>
+  </tr>
+</table>
 
 ## Command surface
 
