@@ -58,6 +58,32 @@ These checks use no paid GitHub security features or hosted scanning service.
 - Do not include secrets, tokens, real tenant data or internal URLs in code, tests, fixtures, docs or
   commit messages.
 
+### Public attribution and permanent metadata
+
+Git records more than the current files. Commit author names and email addresses, branch names, commit
+messages, pull-request discussions, reviews, screenshots, workflow logs and deleted file contents may all
+become permanently public.
+
+- Before your first commit, configure an identity you intend to publish. Use an approved company email or
+  the verified GitHub `noreply` address shown in **GitHub → Settings → Emails**. Do not guess the address.
+- An approved company address is valid public attribution; a `noreply` address hides the email, not the
+  contributor's identity.
+- Pull-request reviews and approvals are attributed to the reviewer's public GitHub account. They cannot
+  be anonymous while retaining review provenance.
+- Keep personal email addresses, local filesystem paths, customer or tenant identifiers, internal branch
+  names, private discussions and private-environment details out of commits and captured output.
+- Inspect screenshots and exported-file metadata before adding them. Use approved synthetic demo data for
+  examples.
+- Correct identity or metadata before pushing. Do not casually rewrite shared history: rewriting changes
+  commit IDs, invalidates references and signatures, and requires a renewed full-history audit.
+
+For repository-local configuration, for example:
+
+```bash
+git config user.name "Your Name"
+git config user.email "the-exact-address-approved-for-public-commits"
+```
+
 ## Reporting bugs and requesting features
 
 Use the issue templates. For anything security-related, follow [SECURITY.md](SECURITY.md) instead of
