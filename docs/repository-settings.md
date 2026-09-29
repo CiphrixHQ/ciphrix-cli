@@ -25,10 +25,11 @@ public (and verify after any settings change).
 
 - Publish releases from tags on `main` only (for example `v0.1.0`).
 - The `release` workflow publishes the npm package with provenance and creates the GitHub release.
-- Configure npm trusted publishing for the package using GitHub Actions with organization `CiphrixHQ`,
-  repository `ciphrix-cli`, workflow filename `release.yml`, and environment `npm`. The release
-  workflow uses GitHub OIDC and publishes directly with `npm publish`; enable direct publishing for
-  this trusted publisher. No npm publish token or `NPM_TOKEN` secret is required.
+- Configure npm trusted publishing for package `@ciphrix/cli` using GitHub Actions with organization
+  `CiphrixHQ`, repository `ciphrix-cli`, workflow filename `release.yml`, and environment `npm`. The
+  release workflow uses GitHub OIDC and publishes directly with `npm publish --access public`; enable
+  direct publishing for this trusted publisher. No npm publish token or `NPM_TOKEN` secret is
+  required.
 - Keep the GitHub `npm` environment and configure its protection rules if release approval is needed.
 
 ## Security

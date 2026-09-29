@@ -40,6 +40,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - name: Check generated command reference
+        run: npm run commands:check
       - name: Verify the tag matches the package version
         run: |
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"

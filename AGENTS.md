@@ -39,6 +39,10 @@ this repository. When in doubt, leave it out and ask.
 
 - Use generic examples only: `https://api.example.com`, `<policy-id>`, `<your-token>`.
 - Configure the environment through `--api-url` / `CIPHRIX_API_URL`; never hardcode one.
+- Require HTTPS for API URLs by default. Keep `--allow-insecure-http` and
+  `CIPHRIX_ALLOW_INSECURE_HTTP=true` as explicit, documented opt-ins for local/non-production HTTP
+  testing. Validate the URL before resolving identity or credentials, reject userinfo/query/fragment
+  and non-HTTP(S) schemes, and never follow redirects on authenticated requests or uploads.
 - Development and audit scripts must not default to internal, development, loopback, or private-network
   endpoints. Require an explicit `--api-url` / environment value; use a generic placeholder only in
   documentation, never as a working credentialed endpoint.
@@ -78,7 +82,40 @@ All items are required before changing repository visibility or publishing a rel
 - No business logic. No direct domain persistence. Delegate to the HTTP tool surface.
 - Never import or copy API/backend code or a private types package; the manifest is the only contract.
 - Do not hardcode tool names, schemas or endpoints beyond the versioned tool path.
-- Credentials live in the OS keychain, with a documented `0600` file fallback; never print or log tokens.
+- Credentials live in the OS keychain by default; never silently fall back to plaintext storage or print
+  or log tokens. The `CIPHRIX_CREDENTIAL_STORE=file` option is an explicit local/headless testing opt-in
+  and must keep the containing directory at `0700` and the credential file at `0600` where supported.
+- Logout must attempt remote session revocation before removing the local credential. On network,
+  redirect, server, or other uncertain failures, retain the credential and give retry guidance; only
+  clear it on confirmed revocation or a definitive invalid-session response. `logout --local-only` is
+  the explicit opt-in to remove the local copy without revoking the remote session and must say so.
+- Keep bounded request deadlines, response buffering and local upload sizes. Uploads must refuse
+  symbolic links and special files before reading or transmitting data.
+
+## Public agent skill
+
+`skills/ciphrix/SKILL.md` is a public product interface. It teaches third-party agent harnesses both the
+Ciphrix domain model and how Ciphrix expects an agent to behave. Treat changes to it with the same care as
+changes to command semantics.
+
+- Preserve the product worldview: compliance is a living model of the organization; evidence is distinct
+  from assertion; AI assists but does not make formal human decisions; authorization and API responses are
+  authoritative.
+- Include only public product concepts and behaviour observable through the released CLI. Never disclose
+  private implementation details, internal operational knowledge, hidden endpoints, customer examples or
+  unreleased capabilities.
+- Keep the skill useful across agent harnesses. Do not depend on one vendor's proprietary prompt syntax,
+  tools or filesystem layout. Exact command syntax must come from `ciphrix --help`, not a hand-maintained
+  command catalogue in the skill. The linked `references/commands.md` is generated from Commander help and
+  checked for drift in CI.
+- Keep the frontmatter description discriminating because agent harnesses use it for activation. Keep the
+  body focused on non-obvious domain relationships, decision principles, authority boundaries and reusable
+  workflows.
+- When CLI nouns, lifecycle rules, confirmation behaviour, authentication, or security defaults change,
+  review the skill and the README agent-installation section in the same pull request.
+- Validate the skill frontmatter and test discovery with the current Skills CLI before release. Publishing
+  the npm executable must never run a postinstall hook that writes into agent configuration directories;
+  skill installation is an explicit, separate user action.
 
 ## Code conventions
 
@@ -92,7 +129,9 @@ All items are required before changing repository visibility or publishing a rel
 - Trunk-based: `main` is always releasable and protected; changes land through short-lived branches
   named `feat/`, `fix/`, `docs/`, `chore/`; CI and one approval required.
 - Conventional commits; update `CHANGELOG.md` for user-visible changes.
-- Run before opening a PR: `npm run format:check && npm run lint && npm run typecheck && npm test && npm run build`.
+- Run before opening a PR: `npm run ci`, `npm audit --audit-level=high`, and
+  `semgrep scan --config .semgrep.yml --error --metrics=off --oss-only`.
+- After building, run `npm run commands:check` to ensure the generated agent command reference matches current Commander help output.
 - Changes to authentication, credential storage, command grammar or output format need an explicit
   review sign-off.
 

@@ -45,6 +45,11 @@ Before opening a pull request, run:
 npm run format:check && npm run lint && npm run typecheck && npm test && npm run build
 ```
 
+CI also runs `npm audit --audit-level=high` against the locked dependency tree and Semgrep OSS
+against the committed `.semgrep.yml` rules. The dependency audit fails on high or critical advisories;
+the local Semgrep rules flag dynamic JavaScript evaluation and untrusted input reaching shell commands.
+These checks use no paid GitHub security features or hosted scanning service.
+
 ## Commits and pull requests
 
 - Use clear, imperative commit messages (for example `feat: add tools list command`).

@@ -21,6 +21,91 @@ export interface ApiClient {
   request(path: string, options?: RequestOptions): Promise<unknown>;
 }
 
+/** Default time allowed for an API request, including reading its response body. */
+export const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+/** Maximum decoded response size buffered by the CLI. */
+export const DEFAULT_MAX_RESPONSE_BYTES = 10 * 1024 * 1024;
+
+export interface RequestLimits {
+  timeoutMs?: number;
+  maxResponseBytes?: number;
+}
+
+export const withRequestTimeout = async <T>(
+  timeoutMs: number,
+  operation: (signal: AbortSignal) => Promise<T>,
+): Promise<T> => {
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+  try {
+    return await operation(controller.signal);
+  } catch (error) {
+    if (timedOut) {
+      throw new Error(`Request timed out after ${Math.ceil(timeoutMs / 1000)} seconds.`, {
+        cause: error,
+      });
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+export const readLimitedText = async (response: Response, maxBytes: number): Promise<string> => {
+  const declaredLength = Number(response.headers.get('content-length'));
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    await response.body?.cancel().catch(() => undefined);
+    throw new Error(`The API response exceeds the ${maxBytes}-byte size limit.`);
+  }
+  if (!response.body) return '';
+
+  const reader = (response.body as ReadableStream<Uint8Array>).getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const readPromise: Promise<unknown> = Promise.resolve(reader.read() as unknown);
+      const result = await readPromise.then(
+        (value: unknown) => value as { done: boolean; value: Uint8Array | undefined },
+      );
+      const { done, value } = result;
+      if (done) break;
+      if (!value) continue;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => undefined);
+        throw new Error(`The API response exceeds the ${maxBytes}-byte size limit.`);
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const buffer = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    buffer.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(buffer);
+};
+
+/** Never follow redirects for requests that may carry credentials or user data. */
+export const fetchWithoutRedirects = async (url: string, init: RequestInit): Promise<Response> => {
+  const response = await fetch(url, { ...init, redirect: 'manual' });
+  if (response.status >= 300 && response.status < 400) {
+    throw new Error(
+      'The API redirected this request. Redirects are blocked to protect credentials and data; update the API URL to the final HTTPS endpoint.',
+    );
+  }
+  return response;
+};
+
 const errorPayload = (
   data: unknown,
 ): { message: string | undefined; code: string | undefined; details: unknown[] } => {
@@ -92,9 +177,11 @@ const withDetails = (message: string, code: string | undefined, details: unknown
   return message;
 };
 
-export const createApiClient = (baseUrl: string): ApiClient => ({
+export const createApiClient = (baseUrl: string, limits: RequestLimits = {}): ApiClient => ({
   baseUrl,
   request: async (path, options = {}) => {
+    const timeoutMs = limits.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+    const maxResponseBytes = limits.maxResponseBytes ?? DEFAULT_MAX_RESPONSE_BYTES;
     const { method = 'GET', body, token } = options;
     const headers: Record<string, string> = {};
     if (body !== undefined) headers['content-type'] = 'application/json';
@@ -103,27 +190,29 @@ export const createApiClient = (baseUrl: string): ApiClient => ({
     const init: RequestInit = { method, headers };
     if (body !== undefined) init.body = JSON.stringify(body);
 
-    const response = await fetch(`${baseUrl}${path}`, init);
-    const text = await response.text();
+    return withRequestTimeout(timeoutMs, async (signal) => {
+      const response = await fetchWithoutRedirects(`${baseUrl}${path}`, { ...init, signal });
+      const text = await readLimitedText(response, maxResponseBytes);
 
-    let data: unknown = null;
-    if (text) {
-      try {
-        data = JSON.parse(text);
-      } catch {
-        data = text;
+      let data: unknown = null;
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = text;
+        }
       }
-    }
 
-    if (!response.ok) {
-      const { message, code, details } = errorPayload(data);
-      throw new ApiError(
-        withDetails(message || `Request failed with status ${response.status}`, code, details),
-        response.status,
-        code,
-      );
-    }
+      if (!response.ok) {
+        const { message, code, details } = errorPayload(data);
+        throw new ApiError(
+          withDetails(message || `Request failed with status ${response.status}`, code, details),
+          response.status,
+          code,
+        );
+      }
 
-    return data;
+      return data;
+    });
   },
 });

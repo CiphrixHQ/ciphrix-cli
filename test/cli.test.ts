@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { CLI_NAME, CLI_TAGLINE, CLI_VERSION } from '../src/constants.js';
 import { createProgram, main, type CliIO } from '../src/cli.js';
@@ -11,6 +14,7 @@ const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url),
   version: string;
   bin: Record<string, string>;
 };
+const originalInsecureHttpOptIn = process.env.CIPHRIX_ALLOW_INSECURE_HTTP;
 
 class Capture {
   private readonly chunks: string[] = [];
@@ -57,6 +61,23 @@ describe('program', () => {
     expect(program.description()).toBe(CLI_TAGLINE);
   });
 
+  it('documents the headless login option in command help', () => {
+    const { io } = captureIO();
+    const program = createProgram(io);
+    const login = program.commands.find((command) => command.name() === 'login');
+    expect(login?.helpInformation()).toContain('--no-open');
+  });
+
+  it('documents advanced environment configuration in root help', async () => {
+    const { io, out } = captureIO();
+    const code = await main(['node', CLI_NAME, '--help'], io);
+    expect(code).toBe(0);
+    expect(out.text()).toContain('CIPHRIX_API_URL');
+    expect(out.text()).toContain('CIPHRIX_CREDENTIAL_STORE=file');
+    expect(out.text()).toContain('CIPHRIX_ALLOW_INSECURE_HTTP=true');
+    expect(out.text()).toContain('No general config file is read.');
+  });
+
   it('renders the banner with the version', () => {
     const banner = formatBanner(createTheme(false));
     expect(banner).toContain('██████');
@@ -83,6 +104,90 @@ describe('program', () => {
     const code = await main(['node', CLI_NAME, 'definitely-not-a-command'], io);
     expect(code).not.toBe(0);
     expect(err.text()).toContain('error:');
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    if (originalInsecureHttpOptIn === undefined) delete process.env.CIPHRIX_ALLOW_INSECURE_HTTP;
+    else process.env.CIPHRIX_ALLOW_INSECURE_HTTP = originalInsecureHttpOptIn;
+  });
+
+  it.each([
+    ['before the command', ['--allow-insecure-http', 'login', '--api-url', 'http://localhost/api']],
+    ['after the command', ['login', '--api-url', 'http://localhost/api', '--allow-insecure-http']],
+  ])('applies the HTTP opt-in consistently when specified %s', async (_position, args) => {
+    const { io, err } = captureIO();
+    const fetchMock = vi.fn(() => Promise.resolve(new Response('{}', { status: 400 })));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const code = await main(['node', CLI_NAME, ...args], io);
+
+    expect(code).toBe(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[0]).toBe(
+      'http://localhost/api/auth/device/code',
+    );
+    expect(err.text()).not.toContain('Refusing to send credentials or data over HTTP');
+  });
+
+  it('rejects HTTP before making a request when the CLI opt-in is absent', async () => {
+    const { io, err } = captureIO();
+    const fetchMock = vi.fn(() => Promise.resolve(new Response('{}', { status: 400 })));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const code = await main(['node', CLI_NAME, 'login', '--api-url', 'http://localhost/api'], io);
+
+    expect(code).toBe(1);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(err.text()).toContain('Refusing to send credentials or data over HTTP');
+  });
+
+  it('honours the environment opt-in for headless commands', async () => {
+    const { io, err } = captureIO();
+    process.env.CIPHRIX_ALLOW_INSECURE_HTTP = 'true';
+    const fetchMock = vi.fn(() => Promise.resolve(new Response('{}', { status: 400 })));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const code = await main(['node', CLI_NAME, 'login', '--api-url', 'http://localhost/api'], io);
+
+    expect(code).toBe(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(err.text()).not.toContain('Refusing to send credentials or data over HTTP');
+  });
+
+  it('applies the root opt-in to nested resource commands', async () => {
+    const { io, err } = captureIO();
+    const configHome = await mkdtemp(join(tmpdir(), 'ciphrix-cli-test-'));
+    const previousCredentialStore = process.env.CIPHRIX_CREDENTIAL_STORE;
+    const previousConfigHome = process.env.XDG_CONFIG_HOME;
+    process.env.CIPHRIX_CREDENTIAL_STORE = 'file';
+    process.env.XDG_CONFIG_HOME = configHome;
+
+    try {
+      const code = await main(
+        [
+          'node',
+          CLI_NAME,
+          'context',
+          'status',
+          'business',
+          '--api-url',
+          'http://localhost/api',
+          '--allow-insecure-http',
+        ],
+        io,
+      );
+
+      expect(code).toBe(1);
+      expect(err.text()).toContain('Not signed in');
+      expect(err.text()).not.toContain('Refusing to send credentials or data over HTTP');
+    } finally {
+      if (previousCredentialStore === undefined) delete process.env.CIPHRIX_CREDENTIAL_STORE;
+      else process.env.CIPHRIX_CREDENTIAL_STORE = previousCredentialStore;
+      if (previousConfigHome === undefined) delete process.env.XDG_CONFIG_HOME;
+      else process.env.XDG_CONFIG_HOME = previousConfigHome;
+      await rm(configHome, { recursive: true, force: true });
+    }
   });
 });
 
