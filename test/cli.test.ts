@@ -68,6 +68,16 @@ describe('program', () => {
     expect(login?.helpInformation()).toContain('--no-open');
   });
 
+  it('documents advanced environment configuration in root help', async () => {
+    const { io, out } = captureIO();
+    const code = await main(['node', CLI_NAME, '--help'], io);
+    expect(code).toBe(0);
+    expect(out.text()).toContain('CIPHRIX_API_URL');
+    expect(out.text()).toContain('CIPHRIX_CREDENTIAL_STORE=file');
+    expect(out.text()).toContain('CIPHRIX_ALLOW_INSECURE_HTTP=true');
+    expect(out.text()).toContain('No general config file is read.');
+  });
+
   it('renders the banner with the version', () => {
     const banner = formatBanner(createTheme(false));
     expect(banner).toContain('██████');

@@ -34,6 +34,15 @@ Commands:
   risk                   Manage risks
   check                  Monitoring checks
   job                    Check background jobs started by other commands
+Configuration:
+  --api-url <url>                 override the API base URL for one command
+  CIPHRIX_API_URL                 default API base URL for this process
+  CIPHRIX_CREDENTIAL_STORE=file   use plaintext file credentials for local/headless testing
+  CIPHRIX_ALLOW_INSECURE_HTTP=true
+                                  permit HTTP for intentional local testing
+
+Production and the OS keychain are used by default. No general config file is read.
+See the README Configuration section for precedence and security details.
 ```
 
 ## `ciphrix login`
@@ -44,7 +53,7 @@ Usage: ciphrix login [options] [url]
 Sign in to Ciphrix with device authorization
 
 Options:
-  --api-url <url>       API base URL
+  --api-url <url>       override the API base URL for this command
   --device-name <name>  a name for this device (defaults to the machine name)
   --no-open             do not open the verification link in a browser
   -h, --help            display help for command
@@ -60,7 +69,7 @@ Usage: ciphrix logout [options]
 Revoke the remote session and remove the stored credential
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --local-only     remove the local credential without revoking the remote
                    session
   -h, --help       display help for command
@@ -96,7 +105,7 @@ Usage: ciphrix context get [options] <store>
 Print a context digest (business | operating)
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -109,7 +118,7 @@ Usage: ciphrix context status [options] <store>
 Show context completion and unanswered questions
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -122,7 +131,7 @@ Usage: ciphrix context set [options] <target> <value>
 Set one answer, for example business.company_size "50-200"
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -138,7 +147,7 @@ Reset Business Context (asks to confirm)
 
 Options:
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -185,7 +194,7 @@ Options:
   --status <csv>   filter by latest run status
   --page <n>       page number
   --limit <n>      page size
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -198,7 +207,7 @@ Usage: ciphrix test get [options] <name>
 Show a test, its runs and AI assurance
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -211,7 +220,7 @@ Usage: ciphrix test runs [options] <name>
 List a test’s runs with AI assurance
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -225,7 +234,7 @@ List a run’s evidence with AI relevance (defaults to the current run)
 
 Options:
   --run <id>       a specific run
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -244,7 +253,7 @@ Options:
   --file <path>      upload a local file and attach it
   --run <id>         a specific run
   --unlink           unlink instead of link
-  --api-url <url>    API base URL
+  --api-url <url>    override the API base URL for this command
   --json             output raw JSON
   -h, --help         display help for command
 ```
@@ -278,7 +287,7 @@ Create a new pending run
 
 Options:
   --run-at <date>  run date (ISO); defaults to now
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -296,7 +305,7 @@ Options:
   --status <status>  passing | failing | skipped | pending
   --note <text>      note for the run
   --run <id>         a specific run
-  --api-url <url>    API base URL
+  --api-url <url>    override the API base URL for this command
   --json             output raw JSON
   -h, --help         display help for command
 ```
@@ -313,7 +322,7 @@ Delete a run
 Options:
   --run <id>       the run to delete
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -331,7 +340,7 @@ Options:
   --type <type>    item type: native_doc or check
   --run <id>       a specific run
   --search <text>  filter by item name
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -344,7 +353,7 @@ Usage: ciphrix test links [options] <name>
 Show the controls and clauses a test covers
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -366,7 +375,7 @@ Options:
   --rename <text>           new name (custom tests only)
   --guidance <text>         new guidance (custom tests only)
   --yes                     apply without prompting
-  --api-url <url>           API base URL
+  --api-url <url>           override the API base URL for this command
   --json                    output raw JSON
   -h, --help                display help for command
 ```
@@ -382,7 +391,7 @@ Delete a custom test
 
 Options:
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -418,7 +427,7 @@ Usage: ciphrix framework list [options]
 List applied frameworks with status and available frameworks
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -435,7 +444,7 @@ Options:
   --applicability <value>  in_scope or out_of_scope
   --page <n>               page number
   --limit <n>              page size
-  --api-url <url>          API base URL
+  --api-url <url>          override the API base URL for this command
   --json                   output raw JSON
   -h, --help               display help for command
 ```
@@ -448,7 +457,7 @@ Usage: ciphrix framework clause [options] <framework> <clause>
 Show one clause by code or name
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -461,7 +470,7 @@ Usage: ciphrix framework items [options] <framework> <clause>
 List the items mapped to a clause
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -476,7 +485,7 @@ List items that can be mapped to a clause
 Options:
   --type <type>    item type: test or document
   --search <text>  filter by item name
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -494,7 +503,7 @@ Options:
   --design-requirements <state>  not_assessed | not_needed | not_met | partial |
                                  met
   --yes                          apply without prompting
-  --api-url <url>                API base URL
+  --api-url <url>                override the API base URL for this command
   --json                         output raw JSON
   -h, --help                     display help for command
 ```
@@ -512,7 +521,7 @@ Options:
   --type <type>    item type: test or document
   --unlink         unlink instead of link
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -558,7 +567,7 @@ Options:
   --data-classification <value>  filter by data classification
   --page <n>                     page number
   --limit <n>                    page size
-  --api-url <url>                API base URL
+  --api-url <url>                override the API base URL for this command
   --json                         output raw JSON
   -h, --help                     display help for command
 ```
@@ -571,7 +580,7 @@ Usage: ciphrix asset get [options] <asset>
 Show one asset by code, customer key or name
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -587,7 +596,7 @@ Options:
   --type <type>    controls, risks, tests or checks
   --page <n>       page number
   --limit <n>      page size
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -613,7 +622,7 @@ Options:
   --external-ref <value>         external reference id
   --location <value>             location
   --yes                          apply without prompting
-  --api-url <url>                API base URL
+  --api-url <url>                override the API base URL for this command
   --json                         output raw JSON
   -h, --help                     display help for command
 ```
@@ -640,7 +649,7 @@ Options:
   --technical-owner <id>         technical owner user id
   --business-owner <value>       business owner
   --location <value>             location
-  --api-url <url>                API base URL
+  --api-url <url>                override the API base URL for this command
   --json                         output raw JSON
   -h, --help                     display help for command
 ```
@@ -656,7 +665,7 @@ Delete an asset
 
 Options:
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -671,7 +680,7 @@ Usage: ciphrix asset tags [options] <asset>
 List an asset’s tags
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -688,7 +697,7 @@ Options:
   --value <value>       tag value
   --unlink <mappingId>  tag mapping id to remove
   --yes                 apply without prompting
-  --api-url <url>       API base URL
+  --api-url <url>       override the API base URL for this command
   --json                output raw JSON
   -h, --help            display help for command
 ```
@@ -731,7 +740,7 @@ Options:
   --relationship-status <value>  filter by relationship status
   --page <n>                     page number
   --limit <n>                    page size
-  --api-url <url>                API base URL
+  --api-url <url>                override the API base URL for this command
   --json                         output raw JSON
   -h, --help                     display help for command
 ```
@@ -744,7 +753,7 @@ Usage: ciphrix vendor get [options] <name>
 Show one vendor
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -761,7 +770,7 @@ Options:
   --category <value>     category
   --criticality <value>  criticality
   --description <text>   description
-  --api-url <url>        API base URL
+  --api-url <url>        override the API base URL for this command
   --json                 output raw JSON
   -h, --help             display help for command
 ```
@@ -785,7 +794,7 @@ Options:
   --relationship-status <value>  active | inactive | onboarding | terminated
   --review-status <value>        pending | completed | expired
   --internal-owner <value>       internal owner (email)
-  --api-url <url>                API base URL
+  --api-url <url>                override the API base URL for this command
   --json                         output raw JSON
   -h, --help                     display help for command
 ```
@@ -801,7 +810,7 @@ Delete a vendor
 
 Options:
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -816,7 +825,7 @@ Usage: ciphrix vendor files [options] <name>
 List the files attached to a vendor
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -832,7 +841,7 @@ Options:
   --file <path>    stage and attach a local file
   --upload <id>    attach an already-staged upload
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -848,7 +857,7 @@ Detach a file from a vendor by its mapping id
 
 Options:
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -891,7 +900,7 @@ Options:
   --applicability <value>  filter by applicability (in_scope|out_of_scope)
   --page <n>               page number
   --limit <n>              page size
-  --api-url <url>          API base URL
+  --api-url <url>          override the API base URL for this command
   --json                   output raw JSON
   -h, --help               display help for command
 ```
@@ -904,7 +913,7 @@ Usage: ciphrix control get [options] <control>
 Show one control by name or code
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -920,7 +929,7 @@ Options:
   --search <text>  filter by item name
   --page <n>       page number
   --limit <n>      page size
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -937,7 +946,7 @@ Options:
   --search <text>  filter by item name
   --page <n>       page number
   --limit <n>      page size
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -958,7 +967,7 @@ Options:
   --notes <text>                 notes (Markdown)
   --rename <text>                new name (custom controls only)
   --yes                          apply without prompting
-  --api-url <url>                API base URL
+  --api-url <url>                override the API base URL for this command
   --json                         output raw JSON
   -h, --help                     display help for command
 ```
@@ -976,7 +985,7 @@ Options:
   --type <type>    item type: test or document
   --unlink         unlink instead of link
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1020,7 +1029,7 @@ Options:
   --status <csv>   filter by workflow status
   --page <n>       page number
   --limit <n>      page size
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1035,7 +1044,7 @@ Print a document as Markdown (by name or id)
 Options:
   --version-number <n>  a specific version number
   --minor-number <n>    a specific minor version (with --version-number)
-  --api-url <url>       API base URL
+  --api-url <url>       override the API base URL for this command
   --json                output raw JSON
   -h, --help            display help for command
 ```
@@ -1052,7 +1061,7 @@ Options:
   --description <value>  description
   --type <value>         document type
   --publish <on|off>     published state
-  --api-url <url>        API base URL
+  --api-url <url>        override the API base URL for this command
   --json                 output raw JSON
   -h, --help             display help for command
 ```
@@ -1067,7 +1076,7 @@ Usage: ciphrix document versions [options] <document>
 Show a document’s version history
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1083,7 +1092,7 @@ Options:
   --name <name>         policy name
   --type <type>         document type
   --description <text>  short description
-  --api-url <url>       API base URL
+  --api-url <url>       override the API base URL for this command
   --json                output raw JSON
   -h, --help            display help for command
 ```
@@ -1101,7 +1110,7 @@ Options:
   --file <path>         read the new Markdown from a file
   --content <markdown>  new Markdown inline
   --yes                 apply without prompting
-  --api-url <url>       API base URL
+  --api-url <url>       override the API base URL for this command
   --json                output raw JSON
   -h, --help            display help for command
 ```
@@ -1119,7 +1128,7 @@ Options:
   --change-type <type>  change type
   --summary <text>      change summary
   --yes                 apply without prompting
-  --api-url <url>       API base URL
+  --api-url <url>       override the API base URL for this command
   --json                output raw JSON
   -h, --help            display help for command
 ```
@@ -1135,7 +1144,7 @@ Submit a draft document for review
 
 Options:
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1151,7 +1160,7 @@ Approve a document awaiting approval
 
 Options:
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1167,7 +1176,7 @@ Delete a document
 
 Options:
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1215,7 +1224,7 @@ Options:
   --business-unit <value>  filter by business unit
   --page <n>               page number
   --limit <n>              page size
-  --api-url <url>          API base URL
+  --api-url <url>          override the API base URL for this command
   --json                   output raw JSON
   -h, --help               display help for command
 ```
@@ -1228,7 +1237,7 @@ Usage: ciphrix risk get [options] <risk>
 Show one risk by title or id
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1248,7 +1257,7 @@ Options:
   --treatment-type <value>  treatment strategy
   --treatment-notes <text>  treatment notes (Markdown)
   --business-unit <value>   business unit
-  --api-url <url>           API base URL
+  --api-url <url>           override the API base URL for this command
   --json                    output raw JSON
   -h, --help                display help for command
 ```
@@ -1266,7 +1275,7 @@ Options:
   --title <title>        risk title
   --category <value>     category
   --description <value>  description
-  --api-url <url>        API base URL
+  --api-url <url>        override the API base URL for this command
   --json                 output raw JSON
   -h, --help             display help for command
 ```
@@ -1282,7 +1291,7 @@ Delete a risk
 
 Options:
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1297,7 +1306,7 @@ Usage: ciphrix risk treatment [options] <risk>
 Show a risk’s treatment strategy and notes
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1310,7 +1319,7 @@ Usage: ciphrix risk scores [options] <risk>
 Show a risk’s scores
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1323,7 +1332,7 @@ Usage: ciphrix risk controls [options] <risk>
 List the controls linked to a risk
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1339,7 +1348,7 @@ Options:
   --control <id>        control instance id to link
   --unlink <mappingId>  control mapping id to unlink
   --yes                 apply without prompting
-  --api-url <url>       API base URL
+  --api-url <url>       override the API base URL for this command
   --json                output raw JSON
   -h, --help            display help for command
 ```
@@ -1354,7 +1363,7 @@ Usage: ciphrix risk files [options] <risk>
 List the files attached to a risk
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1370,7 +1379,7 @@ Options:
   --file <path>    stage and attach a local file
   --upload <id>    attach an already-staged upload
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1386,7 +1395,7 @@ Detach a file from a risk by its mapping id
 
 Options:
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1427,7 +1436,7 @@ Options:
   --status <csv>            filter by status
   --page <n>                page number
   --limit <n>               page size
-  --api-url <url>           API base URL
+  --api-url <url>           override the API base URL for this command
   --json                    output raw JSON
   -h, --help                display help for command
 ```
@@ -1440,7 +1449,7 @@ Usage: ciphrix check resources [options] <check>
 List the resources covered by a check
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1453,7 +1462,7 @@ Usage: ciphrix check run [options] <check>
 Show a check’s latest run
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1468,7 +1477,7 @@ Usage: ciphrix check integrations [options]
 List check integration types
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1483,7 +1492,7 @@ List a check’s run history
 Options:
   --page <n>       page number
   --limit <n>      page size
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1496,7 +1505,7 @@ Usage: ciphrix check findings [options] <check>
 List the findings raised from a check
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1511,7 +1520,7 @@ Enable a check for this tenant
 Options:
   --notes <text>   why
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1528,7 +1537,7 @@ Disable a check for this tenant
 Options:
   --notes <text>   why
   --yes            apply without prompting
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```
@@ -1558,7 +1567,7 @@ Usage: ciphrix job status [options] <jobId>
 Show the status of a background job
 
 Options:
-  --api-url <url>  API base URL
+  --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
 ```

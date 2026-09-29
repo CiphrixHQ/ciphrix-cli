@@ -110,6 +110,12 @@ that command responsibly. The npm installer never modifies agent configuration d
 
 ## Configuration
 
+The CLI does not read a general configuration file. API selection uses the first value available in
+this order: a command's `--api-url`, `CIPHRIX_API_URL`, then the built-in production default. The API
+base includes its public API prefix; the CLI appends its versioned authentication and `/tools/v1` paths.
+Credentials are stored separately for each API base, so signing into a local or non-production environment
+does not replace the production credential.
+
 - `CIPHRIX_API_URL` — API base URL. Defaults to the production API; pass `--api-url` (or
   `ciphrix login <url>`) to target another environment.
 - API URLs must use HTTPS. For intentional local or non-production testing against a plaintext HTTP

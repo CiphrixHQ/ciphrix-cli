@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { format } from 'prettier';
-import { createProgram } from '../dist/cli.js';
+import { CONFIGURATION_HELP, createProgram } from '../dist/cli.js';
 
 const outputPath = resolve('skills/ciphrix/references/commands.md');
 const checkOnly = process.argv.includes('--check');
@@ -74,7 +74,7 @@ const lines = [
   '## `ciphrix`',
   '',
   '```text',
-  program.helpInformation().trimEnd(),
+  `${program.helpInformation().trimEnd()}${CONFIGURATION_HELP}`.trimEnd(),
   '```',
   '',
 ];

@@ -25,6 +25,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Root and command help now expose the API override and advanced environment configuration entry points;
+  the README documents configuration precedence and per-environment credential isolation.
 - Clean builds now preserve the executable mode of the `ciphrix` entry point, including for local
   `npm link` usage and published package artifacts.
 - API calls now time out after 30 seconds, response bodies are capped at 10 MiB, and local evidence

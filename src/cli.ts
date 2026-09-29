@@ -124,6 +124,18 @@ const readNumberOption = (options: unknown, key: string): number | undefined => 
 const apiUrlOf = (url: string | undefined, options: unknown): string | undefined =>
   url ?? readStringOption(options, 'apiUrl');
 
+export const CONFIGURATION_HELP = `
+Configuration:
+  --api-url <url>                 override the API base URL for one command
+  CIPHRIX_API_URL                 default API base URL for this process
+  CIPHRIX_CREDENTIAL_STORE=file   use plaintext file credentials for local/headless testing
+  CIPHRIX_ALLOW_INSECURE_HTTP=true
+                                  permit HTTP for intentional local testing
+
+Production and the OS keychain are used by default. No general config file is read.
+See the README Configuration section for precedence and security details.
+`;
+
 /**
  * Builds the command tree. Kept separate from `main` so tests can construct a
  * program with captured output and no process exits.
@@ -139,6 +151,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
       '--allow-insecure-http',
       'allow plaintext HTTP for intentional local or non-production testing only',
     )
+    .addHelpText('after', CONFIGURATION_HELP)
     .showHelpAfterError()
     .showSuggestionAfterError();
 
@@ -152,7 +165,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   program
     .command('login [url]')
     .description('Sign in to Ciphrix with device authorization')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--device-name <name>', 'a name for this device (defaults to the machine name)')
     .option('--no-open', 'do not open the verification link in a browser')
     .action(async (url: string | undefined, options: unknown) => {
@@ -171,7 +184,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   program
     .command('logout')
     .description('Revoke the remote session and remove the stored credential')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--local-only', 'remove the local credential without revoking the remote session')
     .action(async (options: unknown) => {
       await logoutCommand({
@@ -188,7 +201,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   context
     .command('get <store>')
     .description('Print a context digest (business | operating)')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (store: string, options: unknown) => {
       await contextGetCommand({
@@ -202,7 +215,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   context
     .command('status <store>')
     .description('Show context completion and unanswered questions')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (store: string, options: unknown) => {
       await contextStatusCommand({
@@ -216,7 +229,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   context
     .command('set <target> <value>')
     .description('Set one answer, for example business.company_size "50-200"')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (target: string, value: string, options: unknown) => {
       await contextSetCommand({
@@ -232,7 +245,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('reset')
     .description('Reset Business Context (asks to confirm)')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await contextResetCommand({
@@ -252,7 +265,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--status <csv>', 'filter by latest run status')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await testListCommand({
@@ -269,7 +282,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   test
     .command('get <name>')
     .description('Show a test, its runs and AI assurance')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await testGetCommand({
@@ -283,7 +296,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   test
     .command('runs <name>')
     .description('List a test\u2019s runs with AI assurance')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await testRunsCommand({
@@ -298,7 +311,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('items <name>')
     .description('List a run\u2019s evidence with AI relevance (defaults to the current run)')
     .option('--run <id>', 'a specific run')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await testItemsCommand({
@@ -319,7 +332,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--file <path>', 'upload a local file and attach it')
     .option('--run <id>', 'a specific run')
     .option('--unlink', 'unlink instead of link')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       const check = readStringOption(options, 'check');
@@ -347,7 +360,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('create <name>')
     .description('Create a new pending run')
     .option('--run-at <date>', 'run date (ISO); defaults to now')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await testRunCreateCommand({
@@ -365,7 +378,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .requiredOption('--status <status>', 'passing | failing | skipped | pending')
     .option('--note <text>', 'note for the run')
     .option('--run <id>', 'a specific run')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await testRunResultCommand({
@@ -384,7 +397,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .description('Delete a run')
     .requiredOption('--run <id>', 'the run to delete')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await testRunDeleteCommand({
@@ -403,7 +416,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .requiredOption('--type <type>', 'item type: native_doc or check')
     .option('--run <id>', 'a specific run')
     .option('--search <text>', 'filter by item name')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await testAvailableItemsCommand({
@@ -420,7 +433,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   test
     .command('links <name>')
     .description('Show the controls and clauses a test covers')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await testLinksCommand({
@@ -443,7 +456,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--rename <text>', 'new name (custom tests only)')
     .option('--guidance <text>', 'new guidance (custom tests only)')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       const changes: Record<string, unknown> = {};
@@ -475,7 +488,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('delete <name>')
     .description('Delete a custom test')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await testDeleteCommand({
@@ -492,7 +505,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   framework
     .command('list')
     .description('List applied frameworks with status and available frameworks')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await frameworkListCommand({
@@ -509,7 +522,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--applicability <value>', 'in_scope or out_of_scope')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await frameworkClausesCommand({
@@ -527,7 +540,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   framework
     .command('clause <framework> <clause>')
     .description('Show one clause by code or name')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (frameworkName: string, clause: string, options: unknown) => {
       await clauseGetCommand({
@@ -542,7 +555,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   framework
     .command('items <framework> <clause>')
     .description('List the items mapped to a clause')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (frameworkName: string, clause: string, options: unknown) => {
       await clauseItemsCommand({
@@ -559,7 +572,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .description('List items that can be mapped to a clause')
     .requiredOption('--type <type>', 'item type: test or document')
     .option('--search <text>', 'filter by item name')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (frameworkName: string, clause: string, options: unknown) => {
       await clauseAvailableItemsCommand({
@@ -580,7 +593,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--justification <text>', 'why the applicability changed')
     .option('--design-requirements <state>', 'not_assessed | not_needed | not_met | partial | met')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (frameworkName: string, clause: string, options: unknown) => {
       const changes: Record<string, unknown> = {};
@@ -609,7 +622,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .requiredOption('--type <type>', 'item type: test or document')
     .option('--unlink', 'unlink instead of link')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (frameworkName: string, clause: string, itemId: string, options: unknown) => {
       await clauseLinkCommand({
@@ -637,7 +650,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--data-classification <value>', 'filter by data classification')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await assetListCommand({
@@ -657,7 +670,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   asset
     .command('get <asset>')
     .description('Show one asset by code, customer key or name')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await assetGetCommand({
@@ -674,7 +687,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .requiredOption('--type <type>', 'controls, risks, tests or checks')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await assetLinksCommand({
@@ -704,7 +717,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--external-ref <value>', 'external reference id')
     .option('--location <value>', 'location')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       const changes: Record<string, unknown> = {};
@@ -750,7 +763,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--technical-owner <id>', 'technical owner user id')
     .option('--business-owner <value>', 'business owner')
     .option('--location <value>', 'location')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await assetCreateCommand({
@@ -776,7 +789,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('delete <asset>')
     .description('Delete an asset')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await assetDeleteCommand({
@@ -791,7 +804,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   asset
     .command('tags <asset>')
     .description('List an asset\u2019s tags')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await assetTagsCommand({
@@ -809,7 +822,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--value <value>', 'tag value')
     .option('--unlink <mappingId>', 'tag mapping id to remove')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       const mappingId = readStringOption(options, 'unlink');
@@ -840,7 +853,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--relationship-status <value>', 'filter by relationship status')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await vendorListCommand({
@@ -858,7 +871,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   vendor
     .command('get <name>')
     .description('Show one vendor')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await vendorGetCommand({
@@ -876,7 +889,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--category <value>', 'category')
     .option('--criticality <value>', 'criticality')
     .option('--description <text>', 'description')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await vendorCreateCommand({
@@ -902,7 +915,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--relationship-status <value>', 'active | inactive | onboarding | terminated')
     .option('--review-status <value>', 'pending | completed | expired')
     .option('--internal-owner <value>', 'internal owner (email)')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (vendorName: string, options: unknown) => {
       const changes: Record<string, string> = {};
@@ -934,7 +947,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('delete <name>')
     .description('Delete a vendor')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await vendorDeleteCommand({
@@ -959,7 +972,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--applicability <value>', 'filter by applicability (in_scope|out_of_scope)')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await controlListCommand({
@@ -978,7 +991,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   control
     .command('get <control>')
     .description('Show one control by name or code')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await controlGetCommand({
@@ -995,7 +1008,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--search <text>', 'filter by item name')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await controlItemsCommand({
@@ -1016,7 +1029,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--search <text>', 'filter by item name')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await controlAvailableItemsCommand({
@@ -1041,7 +1054,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--notes <text>', 'notes (Markdown)')
     .option('--rename <text>', 'new name (custom controls only)')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       const changes: Record<string, unknown> = {};
@@ -1073,7 +1086,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .requiredOption('--type <type>', 'item type: test or document')
     .option('--unlink', 'unlink instead of link')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, itemId: string, options: unknown) => {
       await controlLinkCommand({
@@ -1091,7 +1104,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   vendor
     .command('files <name>')
     .description('List the files attached to a vendor')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await vendorFilesCommand({
@@ -1108,7 +1121,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--file <path>', 'stage and attach a local file')
     .option('--upload <id>', 'attach an already-staged upload')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await vendorAttachCommand({
@@ -1126,7 +1139,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('detach <name> <mappingId>')
     .description('Detach a file from a vendor by its mapping id')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, mappingId: string, options: unknown) => {
       await vendorDetachCommand({
@@ -1148,7 +1161,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--status <csv>', 'filter by workflow status')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await policyListCommand({
@@ -1167,7 +1180,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .description('Print a document as Markdown (by name or id)')
     .option('--version-number <n>', 'a specific version number')
     .option('--minor-number <n>', 'a specific minor version (with --version-number)')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (policyName: string, options: unknown) => {
       await policyGetCommand({
@@ -1187,7 +1200,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--description <value>', 'description')
     .option('--type <value>', 'document type')
     .option('--publish <on|off>', 'published state')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (policyName: string, options: unknown) => {
       const changes: Record<string, unknown> = {};
@@ -1211,7 +1224,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   document
     .command('versions <document>')
     .description('Show a document\u2019s version history')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (policyName: string, options: unknown) => {
       await policyVersionsCommand({
@@ -1228,7 +1241,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .requiredOption('--name <name>', 'policy name')
     .option('--type <type>', 'document type')
     .option('--description <text>', 'short description')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await policyCreateCommand({
@@ -1247,7 +1260,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--file <path>', 'read the new Markdown from a file')
     .option('--content <markdown>', 'new Markdown inline')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (policyName: string, options: unknown) => {
       await policyEditCommand({
@@ -1267,7 +1280,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--change-type <type>', 'change type')
     .option('--summary <text>', 'change summary')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (policyName: string, options: unknown) => {
       await policyVersionCommand({
@@ -1285,7 +1298,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('submit <document>')
     .description('Submit a draft document for review')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (policyName: string, options: unknown) => {
       await policySubmitCommand({
@@ -1301,7 +1314,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('approve <document>')
     .description('Approve a document awaiting approval')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (policyName: string, options: unknown) => {
       await policyApproveCommand({
@@ -1317,7 +1330,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('delete <document>')
     .description('Delete a document')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (policyName: string, options: unknown) => {
       await policyDeleteCommand({
@@ -1338,7 +1351,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--business-unit <value>', 'filter by business unit')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await riskListCommand({
@@ -1355,7 +1368,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   risk
     .command('get <risk>')
     .description('Show one risk by title or id')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (riskName: string, options: unknown) => {
       await riskGetCommand({
@@ -1376,7 +1389,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--treatment-type <value>', 'treatment strategy')
     .option('--treatment-notes <text>', 'treatment notes (Markdown)')
     .option('--business-unit <value>', 'business unit')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (riskName: string, options: unknown) => {
       const changes: Record<string, string> = {};
@@ -1407,7 +1420,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .requiredOption('--title <title>', 'risk title')
     .option('--category <value>', 'category')
     .option('--description <value>', 'description')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await riskCreateCommand({
@@ -1424,7 +1437,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('delete <risk>')
     .description('Delete a risk')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (riskName: string, options: unknown) => {
       await riskDeleteCommand({
@@ -1439,7 +1452,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   risk
     .command('treatment <risk>')
     .description('Show a risk’s treatment strategy and notes')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (risk: string, options: unknown) => {
       await riskTreatmentCommand({
@@ -1453,7 +1466,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   risk
     .command('scores <risk>')
     .description('Show a risk’s scores')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (risk: string, options: unknown) => {
       await riskScoresCommand({
@@ -1467,7 +1480,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   risk
     .command('controls <risk>')
     .description('List the controls linked to a risk')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (risk: string, options: unknown) => {
       await riskControlsCommand({
@@ -1484,7 +1497,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--control <id>', 'control instance id to link')
     .option('--unlink <mappingId>', 'control mapping id to unlink')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (risk: string, options: unknown) => {
       const mappingId = readStringOption(options, 'unlink');
@@ -1503,7 +1516,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   risk
     .command('files <risk>')
     .description('List the files attached to a risk')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (risk: string, options: unknown) => {
       await riskFilesCommand({
@@ -1520,7 +1533,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--file <path>', 'stage and attach a local file')
     .option('--upload <id>', 'attach an already-staged upload')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (risk: string, options: unknown) => {
       await riskAttachCommand({
@@ -1538,7 +1551,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('detach <risk> <mappingId>')
     .description('Detach a file from a risk by its mapping id')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (risk: string, mappingId: string, options: unknown) => {
       await riskDetachCommand({
@@ -1560,7 +1573,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--status <csv>', 'filter by status')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await checkListCommand({
@@ -1577,7 +1590,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   check
     .command('resources <check>')
     .description('List the resources covered by a check')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (checkName: string, options: unknown) => {
       await checkResourcesCommand({
@@ -1591,7 +1604,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   check
     .command('run <check>')
     .description('Show a check\u2019s latest run')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (checkName: string, options: unknown) => {
       await checkRunCommand({
@@ -1605,7 +1618,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   check
     .command('integrations')
     .description('List check integration types')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (options: unknown) => {
       await checkIntegrationsCommand({
@@ -1620,7 +1633,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .description('List a check’s run history')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await checkRunsCommand({
@@ -1636,7 +1649,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   check
     .command('findings <check>')
     .description('List the findings raised from a check')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await checkFindingsCommand({
@@ -1652,7 +1665,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .description('Enable a check for this tenant')
     .option('--notes <text>', 'why')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await checkSetEnabledCommand({
@@ -1671,7 +1684,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .description('Disable a check for this tenant')
     .option('--notes <text>', 'why')
     .option('--yes', 'apply without prompting')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
       await checkSetEnabledCommand({
@@ -1690,7 +1703,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   job
     .command('status <jobId>')
     .description('Show the status of a background job')
-    .option('--api-url <url>', 'API base URL')
+    .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (jobId: string, options: unknown) => {
       await jobStatusCommand({
