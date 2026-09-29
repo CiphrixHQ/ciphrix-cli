@@ -25,7 +25,7 @@
     "clean": "node scripts/clean.mjs",
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "postbuild": "node scripts/set-bin-mode.mjs",
-    "ci": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run commands:check",
+    "ci": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run commands:check && npm run package:check",
     "dev": "tsx src/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
@@ -36,6 +36,7 @@
     "test:watch": "vitest",
     "commands:generate": "npm run build && node scripts/generate-command-reference.mjs",
     "commands:check": "node scripts/generate-command-reference.mjs --check",
+    "package:check": "node scripts/check-package-contents.mjs",
     "prepack": "npm run build",
     "audit:render": "node scripts/render-audit.mjs"
   },
