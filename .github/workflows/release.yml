@@ -50,7 +50,31 @@ jobs:
             echo "Tag $TAG_VERSION does not match package version $PACKAGE_VERSION" >&2
             exit 1
           fi
-      - name: Publish to npm
+      - name: Check whether the npm package exists
+        id: npm-package
+        run: |
+          STATUS="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            'https://registry.npmjs.org/%40ciphrix%2Fcli')"
+          case "$STATUS" in
+            200) echo "exists=true" >> "$GITHUB_OUTPUT" ;;
+            404) echo "exists=false" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "npm registry returned unexpected HTTP status $STATUS" >&2
+              exit 1
+              ;;
+          esac
+      - name: Bootstrap first npm publication
+        if: steps.npm-package.outputs.exists == 'false'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "The protected npm environment requires NPM_TOKEN for the first publication" >&2
+            exit 1
+          fi
+          npm publish --provenance --access public
+      - name: Publish to npm with trusted publishing
+        if: steps.npm-package.outputs.exists == 'true'
         run: npm publish --provenance --access public
       - name: Create GitHub release
         run: gh release create "$GITHUB_REF_NAME" --generate-notes
