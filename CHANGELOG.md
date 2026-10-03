@@ -18,11 +18,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   storage for local and headless testing.
 - A public `ciphrix` agent skill, installable from the repository with the Skills CLI, describing the
   platform domain model, operating principles, authority boundaries and reliable CLI workflows.
-- `ciphrix policy read <policyId>` — print a policy as Markdown.
-- `ciphrix risk update <riskId> --status <status>` — change a risk status, with an interactive
-  confirmation step (`--yes` to skip).
-- `ciphrix tools list` / `ciphrix tools run` for direct tool access, including the two-step confirmation
-  and idempotency flow for writes; `--json` output for scripting.
+- `ciphrix document get <document>` — print a document as Markdown.
+- `ciphrix risk update <risk> --status <status>` — change a risk status.
 - `--api-url` / `CIPHRIX_API_URL` to target another environment.
 
 ### Changed
