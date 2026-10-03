@@ -123,3 +123,30 @@ describe('policy get', () => {
     );
   });
 });
+
+describe('policy list --json', () => {
+  it('emits the data payload without the response envelope', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          status: 'ok',
+          data: {
+            total: 1,
+            counts: { draft: 1 },
+            policies: [{ id: 'p-1', name: 'Backup Policy' }],
+          },
+          meta: { total: 1 },
+        }),
+      ),
+    );
+    const { io, out, store } = setup();
+
+    await policyListCommand({ io, store, apiUrl, json: true });
+
+    const parsed = JSON.parse(out.text) as Record<string, unknown>;
+    expect(parsed.policies).toHaveLength(1);
+    expect(parsed).not.toHaveProperty('status');
+    expect(parsed).not.toHaveProperty('data');
+  });
+});

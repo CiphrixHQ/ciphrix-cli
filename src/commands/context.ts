@@ -132,16 +132,17 @@ export const contextSetCommand = async ({
   if (!questionId) throw new Error('A question id is required, for example business.company_size');
 
   const ctx = await resolveToolContext(apiUrl, credentialStore);
-  const envelope = await callTool(ctx, 'set_context_answer', {
-    store,
-    questionId,
-    value: parseValue(value),
+  const result = await applyTool({
+    ctx,
+    io,
+    toolName: 'set_context_answer',
+    input: { store, questionId, value: parseValue(value) },
+    fallback: 'Could not save the answer.',
   });
-  if (envelope.status !== 'ok')
-    throw new Error(errorMessage(envelope, 'Could not save the answer.'));
+  if (!result) return;
 
   if (json) {
-    writeLine(io.stdout, JSON.stringify(envelope.data, null, 2));
+    writeLine(io.stdout, JSON.stringify(result.data, null, 2));
     return;
   }
   writeLine(io.stdout, `${io.theme.green('✓')} ${store}.${questionId} saved`);

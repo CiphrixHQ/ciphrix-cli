@@ -29,8 +29,8 @@ const MIME_TYPES: Record<string, string> = {
   '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 };
 
-/** Maximum evidence file size read and staged by the CLI (50 MiB). */
-export const DEFAULT_MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+/** Maximum evidence file size read and staged by the CLI (25 MiB, matching the tool surface). */
+export const DEFAULT_MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
 export interface UploadLimits {
   maxUploadBytes?: number;

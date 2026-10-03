@@ -164,7 +164,7 @@ one command. Installed help is authoritative. The complete generated reference i
 - Destructive and consequential actions require confirmation unless `--yes` is explicitly supplied.
 - JSON output is undecorated and suitable for programs and agents.
 - Requests time out, responses are size-limited, and local evidence uploads reject symbolic links and
-  files over 50 MiB.
+  files over 25 MiB.
 
 Please report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 

@@ -32,7 +32,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Clean builds now preserve the executable mode of the `ciphrix` entry point, including for local
   `npm link` usage and published package artifacts.
 - API calls now time out after 30 seconds, response bodies are capped at 10 MiB, and local evidence
-  uploads are limited to regular files of at most 50 MiB before they are read into memory.
+  uploads are limited to regular files of at most 25 MiB before they are read into memory.
 - The canonical public npm package is now `@ciphrix/cli`; the installed executable remains `ciphrix`.
 - `ciphrix logout` now confirms remote revocation before removing a credential, retains it after
   transient failures for retry, and offers `--local-only` for explicit device-only removal.
@@ -47,6 +47,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   terminal output helpers (colour handling, status vocabulary, banner).
 - Documentation and repository governance: README, CONTRIBUTING, SECURITY, Code of Conduct, issue/PR
   templates, CI and release workflows.
+
+### Fixed
+
+- `ciphrix context set` now sends the idempotency key required for write tools, so saving a Business or
+  Operating Context answer succeeds.
+- `ciphrix document list --json` now emits the data payload, matching the `--json` output of every other
+  command.
 
 ## [0.1.0] - unreleased
 
