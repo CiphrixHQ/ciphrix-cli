@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ToolContext } from '../src/toolSurface.js';
-import { uploadLocalFile } from '../src/upload.js';
+import { DEFAULT_MAX_UPLOAD_BYTES, uploadLocalFile } from '../src/upload.js';
 
 const ctx = {
   baseUrl: 'https://api.example.com/api',
@@ -175,5 +175,11 @@ describe('uploadLocalFile', () => {
     } finally {
       await cleanup();
     }
+  });
+});
+
+describe('upload limits', () => {
+  it('caps staged uploads at the tool surface limit', () => {
+    expect(DEFAULT_MAX_UPLOAD_BYTES).toBe(25 * 1024 * 1024);
   });
 });

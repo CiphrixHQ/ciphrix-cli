@@ -416,6 +416,8 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .requiredOption('--type <type>', 'item type: native_doc or check')
     .option('--run <id>', 'a specific run')
     .option('--search <text>', 'filter by item name')
+    .option('--page <n>', 'page number')
+    .option('--limit <n>', 'page size')
     .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
@@ -425,6 +427,8 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
         runId: readStringOption(options, 'run'),
         itemType: readStringOption(options, 'type') ?? 'native_doc',
         search: readStringOption(options, 'search'),
+        page: readNumberOption(options, 'page'),
+        limit: readNumberOption(options, 'limit'),
         apiUrl: readStringOption(options, 'apiUrl'),
         json: readBooleanOption(options, 'json'),
       });
@@ -572,6 +576,8 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .description('List items that can be mapped to a clause')
     .requiredOption('--type <type>', 'item type: test or document')
     .option('--search <text>', 'filter by item name')
+    .option('--page <n>', 'page number')
+    .option('--limit <n>', 'page size')
     .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (frameworkName: string, clause: string, options: unknown) => {
@@ -581,6 +587,8 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
         clause,
         itemType: readStringOption(options, 'type') ?? 'test',
         search: readStringOption(options, 'search'),
+        page: readNumberOption(options, 'page'),
+        limit: readNumberOption(options, 'limit'),
         apiUrl: readStringOption(options, 'apiUrl'),
         json: readBooleanOption(options, 'json'),
       });
@@ -644,10 +652,13 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .command('list')
     .description('List assets with their code, status and classification')
     .option('--name <text>', 'filter by name')
-    .option('--category <value>', 'filter by category')
+    .option('--category <csv>', 'filter by category')
+    .option('--sub-category <csv>', 'filter by sub-category')
     .option('--status <csv>', 'filter by status')
-    .option('--business-impact <value>', 'filter by business impact')
-    .option('--data-classification <value>', 'filter by data classification')
+    .option('--business-impact <csv>', 'filter by business impact')
+    .option('--data-classification <csv>', 'filter by data classification')
+    .option('--source <csv>', 'filter by discovery source (provider, e.g. aws, azure, gcp)')
+    .option('--technical-owner-email <email>', 'filter by technical owner email')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
     .option('--api-url <url>', 'override the API base URL for this command')
@@ -657,9 +668,12 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
         io,
         name: readStringOption(options, 'name'),
         category: readStringOption(options, 'category'),
+        subCategory: readStringOption(options, 'subCategory'),
         status: readStringOption(options, 'status'),
         businessImpact: readStringOption(options, 'businessImpact'),
         dataClassification: readStringOption(options, 'dataClassification'),
+        source: readStringOption(options, 'source'),
+        technicalOwnerEmail: readStringOption(options, 'technicalOwnerEmail'),
         page: readNumberOption(options, 'page'),
         limit: readNumberOption(options, 'limit'),
         apiUrl: readStringOption(options, 'apiUrl'),
@@ -887,7 +901,10 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .description('Create a vendor')
     .requiredOption('--name <name>', 'vendor name')
     .option('--category <value>', 'category')
+    .option('--subcategory <value>', 'sub-category')
     .option('--criticality <value>', 'criticality')
+    .option('--data-sensitivity <value>', 'data sensitivity')
+    .option('--service-availability <value>', 'service availability')
     .option('--description <text>', 'description')
     .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
@@ -896,7 +913,10 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
         io,
         name: readStringOption(options, 'name') ?? '',
         category: readStringOption(options, 'category'),
+        subcategory: readStringOption(options, 'subcategory'),
         criticality: readStringOption(options, 'criticality'),
+        dataSensitivity: readStringOption(options, 'dataSensitivity'),
+        serviceAvailability: readStringOption(options, 'serviceAvailability'),
         description: readStringOption(options, 'description'),
         apiUrl: readStringOption(options, 'apiUrl'),
         json: readBooleanOption(options, 'json'),
@@ -970,6 +990,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--domain <value>', 'filter by control domain')
     .option('--status <csv>', 'filter by status')
     .option('--applicability <value>', 'filter by applicability (in_scope|out_of_scope)')
+    .option('--owner <csv>', 'filter by owner user id')
     .option('--page <n>', 'page number')
     .option('--limit <n>', 'page size')
     .option('--api-url <url>', 'override the API base URL for this command')
@@ -981,6 +1002,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
         domain: readStringOption(options, 'domain'),
         status: readStringOption(options, 'status'),
         applicability: readStringOption(options, 'applicability'),
+        ownerId: readStringOption(options, 'owner'),
         page: readNumberOption(options, 'page'),
         limit: readNumberOption(options, 'limit'),
         apiUrl: readStringOption(options, 'apiUrl'),
@@ -1052,6 +1074,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .option('--justification <text>', 'why the applicability changed')
     .option('--design-requirements <state>', 'not_assessed | not_needed | not_met | partial | met')
     .option('--notes <text>', 'notes (Markdown)')
+    .option('--description <text>', 'description (custom controls only)')
     .option('--rename <text>', 'new name (custom controls only)')
     .option('--yes', 'apply without prompting')
     .option('--api-url <url>', 'override the API base URL for this command')
@@ -1065,6 +1088,7 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
         ['justification', 'justification'],
         ['designRequirements', 'designRequirements'],
         ['notes', 'notes'],
+        ['description', 'description'],
         ['rename', 'name'],
       ] as const) {
         const value = readStringOption(options, flag);

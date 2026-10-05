@@ -133,18 +133,27 @@ export const vendorCreateCommand = async ({
   credentialStore,
   name,
   category,
+  subcategory,
   criticality,
+  dataSensitivity,
+  serviceAvailability,
   description,
 }: VendorCommonOptions & {
   name: string;
   category?: string | undefined;
+  subcategory?: string | undefined;
   criticality?: string | undefined;
+  dataSensitivity?: string | undefined;
+  serviceAvailability?: string | undefined;
   description?: string | undefined;
 }): Promise<void> => {
   const ctx = await resolveToolContext(apiUrl, credentialStore);
   const input: Record<string, unknown> = { name };
   if (category) input.category = category;
+  if (subcategory) input.subcategory = subcategory;
   if (criticality) input.criticality = criticality;
+  if (dataSensitivity) input.dataSensitivity = dataSensitivity;
+  if (serviceAvailability) input.serviceAvailability = serviceAvailability;
   if (description) input.description = description;
   const result = await applyTool({
     ctx,

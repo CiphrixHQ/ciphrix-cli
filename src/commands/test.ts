@@ -379,11 +379,20 @@ export const testAvailableItemsCommand = async ({
   json = false,
   credentialStore,
   search,
-}: TestReadOptions & { itemType: string; search?: string | undefined }): Promise<void> => {
+  page,
+  limit,
+}: TestReadOptions & {
+  itemType: string;
+  search?: string | undefined;
+  page?: number | undefined;
+  limit?: number | undefined;
+}): Promise<void> => {
   const ctx = await resolveToolContext(apiUrl, credentialStore);
   const input: Record<string, unknown> = { name, itemType };
   if (runId) input.runId = runId;
   if (search) input.search = search;
+  if (page) input.page = page;
+  if (limit) input.limit = limit;
   const envelope = await callTool(ctx, 'list_test_items_available', input);
   if (envelope.status !== 'ok')
     throw new Error(errorMessage(envelope, 'Could not read available items.'));
@@ -414,6 +423,16 @@ export const testAvailableItemsCommand = async ({
       ];
     }),
   );
+  const total = typeof data.total === 'number' ? data.total : items.length;
+  const currentPage = typeof data.page === 'number' ? data.page : 1;
+  const pageSize = typeof data.limit === 'number' ? data.limit : 25;
+  writePageFooter(io, {
+    shown: items.length,
+    total,
+    page: currentPage,
+    limit: pageSize,
+    hasMore: data.hasMore === true || currentPage * pageSize < total,
+  });
 };
 
 export const testLinksCommand = async ({

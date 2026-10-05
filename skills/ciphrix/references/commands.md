@@ -340,6 +340,8 @@ Options:
   --type <type>    item type: native_doc or check
   --run <id>       a specific run
   --search <text>  filter by item name
+  --page <n>       page number
+  --limit <n>      page size
   --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
@@ -485,6 +487,8 @@ List items that can be mapped to a clause
 Options:
   --type <type>    item type: test or document
   --search <text>  filter by item name
+  --page <n>       page number
+  --limit <n>      page size
   --api-url <url>  override the API base URL for this command
   --json           output raw JSON
   -h, --help       display help for command
@@ -560,16 +564,20 @@ Usage: ciphrix asset list [options]
 List assets with their code, status and classification
 
 Options:
-  --name <text>                  filter by name
-  --category <value>             filter by category
-  --status <csv>                 filter by status
-  --business-impact <value>      filter by business impact
-  --data-classification <value>  filter by data classification
-  --page <n>                     page number
-  --limit <n>                    page size
-  --api-url <url>                override the API base URL for this command
-  --json                         output raw JSON
-  -h, --help                     display help for command
+  --name <text>                    filter by name
+  --category <csv>                 filter by category
+  --sub-category <csv>             filter by sub-category
+  --status <csv>                   filter by status
+  --business-impact <csv>          filter by business impact
+  --data-classification <csv>      filter by data classification
+  --source <csv>                   filter by discovery source (provider, e.g.
+                                   aws, azure, gcp)
+  --technical-owner-email <email>  filter by technical owner email
+  --page <n>                       page number
+  --limit <n>                      page size
+  --api-url <url>                  override the API base URL for this command
+  --json                           output raw JSON
+  -h, --help                       display help for command
 ```
 
 ## `ciphrix asset get`
@@ -766,13 +774,16 @@ Usage: ciphrix vendor create [options]
 Create a vendor
 
 Options:
-  --name <name>          vendor name
-  --category <value>     category
-  --criticality <value>  criticality
-  --description <text>   description
-  --api-url <url>        override the API base URL for this command
-  --json                 output raw JSON
-  -h, --help             display help for command
+  --name <name>                   vendor name
+  --category <value>              category
+  --subcategory <value>           sub-category
+  --criticality <value>           criticality
+  --data-sensitivity <value>      data sensitivity
+  --service-availability <value>  service availability
+  --description <text>            description
+  --api-url <url>                 override the API base URL for this command
+  --json                          output raw JSON
+  -h, --help                      display help for command
 ```
 
 **Effect:** Creates a vendor; the CLI prompts if the API requests confirmation.
@@ -898,6 +909,7 @@ Options:
   --domain <value>         filter by control domain
   --status <csv>           filter by status
   --applicability <value>  filter by applicability (in_scope|out_of_scope)
+  --owner <csv>            filter by owner user id
   --page <n>               page number
   --limit <n>              page size
   --api-url <url>          override the API base URL for this command
@@ -965,6 +977,7 @@ Options:
   --design-requirements <state>  not_assessed | not_needed | not_met | partial |
                                  met
   --notes <text>                 notes (Markdown)
+  --description <text>           description (custom controls only)
   --rename <text>                new name (custom controls only)
   --yes                          apply without prompting
   --api-url <url>                override the API base URL for this command

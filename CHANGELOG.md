@@ -18,11 +18,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   storage for local and headless testing.
 - A public `ciphrix` agent skill, installable from the repository with the Skills CLI, describing the
   platform domain model, operating principles, authority boundaries and reliable CLI workflows.
-- `ciphrix policy read <policyId>` — print a policy as Markdown.
-- `ciphrix risk update <riskId> --status <status>` — change a risk status, with an interactive
-  confirmation step (`--yes` to skip).
-- `ciphrix tools list` / `ciphrix tools run` for direct tool access, including the two-step confirmation
-  and idempotency flow for writes; `--json` output for scripting.
+- `ciphrix document get <document>` — print a document as Markdown.
+- `ciphrix risk update <risk> --status <status>` — change a risk status.
 - `--api-url` / `CIPHRIX_API_URL` to target another environment.
 
 ### Changed
@@ -32,7 +29,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Clean builds now preserve the executable mode of the `ciphrix` entry point, including for local
   `npm link` usage and published package artifacts.
 - API calls now time out after 30 seconds, response bodies are capped at 10 MiB, and local evidence
-  uploads are limited to regular files of at most 50 MiB before they are read into memory.
+  uploads are limited to regular files of at most 25 MiB before they are read into memory.
 - The canonical public npm package is now `@ciphrix/cli`; the installed executable remains `ciphrix`.
 - `ciphrix logout` now confirms remote revocation before removing a credential, retains it after
   transient failures for retry, and offers `--local-only` for explicit device-only removal.
@@ -47,6 +44,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   terminal output helpers (colour handling, status vocabulary, banner).
 - Documentation and repository governance: README, CONTRIBUTING, SECURITY, Code of Conduct, issue/PR
   templates, CI and release workflows.
+
+### Fixed
+
+- `ciphrix context set` now sends the idempotency key required for write tools, so saving a Business or
+  Operating Context answer succeeds.
+- `ciphrix document list --json` now emits the data payload, matching the `--json` output of every other
+  command.
 
 ## [0.1.0] - unreleased
 

@@ -55,7 +55,7 @@ export const policyListCommand = async ({
     throw new Error(errorMessage(envelope, 'Could not list documents.'));
 
   if (json) {
-    writeLine(io.stdout, JSON.stringify(envelope, null, 2));
+    writeLine(io.stdout, JSON.stringify(envelope.data, null, 2));
     return;
   }
 
