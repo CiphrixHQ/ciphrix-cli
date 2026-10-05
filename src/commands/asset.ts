@@ -20,31 +20,41 @@ export const assetListCommand = async ({
   credentialStore,
   name,
   category,
+  subCategory,
   status,
   businessImpact,
   dataClassification,
+  source,
+  technicalOwnerEmail,
   page,
   limit,
 }: AssetCommonOptions & {
   name?: string | undefined;
   category?: string | undefined;
+  subCategory?: string | undefined;
   status?: string | undefined;
   businessImpact?: string | undefined;
   dataClassification?: string | undefined;
+  source?: string | undefined;
+  technicalOwnerEmail?: string | undefined;
   page?: number | undefined;
   limit?: number | undefined;
 }): Promise<void> => {
   const ctx = await resolveToolContext(apiUrl, credentialStore);
+  const csv = (value: string): string[] =>
+    value
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean);
   const input: Record<string, unknown> = {};
   if (name) input.name = name;
-  if (category) input.category = [category];
-  if (status)
-    input.status = status
-      .split(',')
-      .map((value) => value.trim())
-      .filter(Boolean);
-  if (businessImpact) input.businessImpact = [businessImpact];
-  if (dataClassification) input.dataClassification = [dataClassification];
+  if (category) input.category = csv(category);
+  if (subCategory) input.subCategory = csv(subCategory);
+  if (status) input.status = csv(status);
+  if (businessImpact) input.businessImpact = csv(businessImpact);
+  if (dataClassification) input.dataClassification = csv(dataClassification);
+  if (source) input.source = csv(source);
+  if (technicalOwnerEmail) input.technicalOwnerEmail = technicalOwnerEmail;
   if (page) input.page = page;
   if (limit) input.limit = limit;
 

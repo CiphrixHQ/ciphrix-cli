@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { assetCreateCommand, assetUpdateCommand } from '../src/commands/asset.js';
+import { assetCreateCommand, assetListCommand, assetUpdateCommand } from '../src/commands/asset.js';
 import { apiUrl, jsonResponse, requestBody, setup } from './helpers.js';
 
 afterEach(() => {
@@ -69,5 +69,46 @@ describe('asset update confirmation', () => {
     expect(first.idempotencyKey).toBeTruthy();
     expect(second.confirmationToken).toBe('tok-asset');
     expect(second.idempotencyKey).toBe(first.idempotencyKey);
+  });
+});
+
+describe('asset list filters', () => {
+  it('sends every supported filter, with array filters split on commas', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse({ status: 'ok', data: { assets: [], total: 0, page: 2, limit: 10 } }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    const { io, store } = setup();
+
+    await assetListCommand({
+      io,
+      credentialStore: store,
+      apiUrl,
+      name: 'Payroll',
+      category: 'application, infrastructure',
+      subCategory: 'database',
+      status: 'active,inactive',
+      businessImpact: 'high',
+      dataClassification: 'confidential,pii',
+      source: 'manual,import',
+      technicalOwnerEmail: 'owner@example.com',
+      page: 2,
+      limit: 10,
+    });
+
+    expect(requestBody(fetchMock.mock.calls[0]).input).toEqual({
+      name: 'Payroll',
+      category: ['application', 'infrastructure'],
+      subCategory: ['database'],
+      status: ['active', 'inactive'],
+      businessImpact: ['high'],
+      dataClassification: ['confidential', 'pii'],
+      source: ['manual', 'import'],
+      technicalOwnerEmail: 'owner@example.com',
+      page: 2,
+      limit: 10,
+    });
   });
 });

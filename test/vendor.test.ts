@@ -23,6 +23,39 @@ describe('vendor write', () => {
     expect(body.input).toEqual({ name: 'Acme' });
     expect(body.idempotencyKey).toBeTruthy();
   });
+
+  it('sends the optional creation fields', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse({ status: 'ok', data: { id: 'v-1', name: 'Acme', status: 'created' } }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    const { io, store } = setup();
+
+    await vendorCreateCommand({
+      io,
+      credentialStore: store,
+      apiUrl,
+      name: 'Acme',
+      category: 'software',
+      subcategory: 'saas',
+      criticality: 'high',
+      dataSensitivity: 'confidential',
+      serviceAvailability: 'business_hours',
+      description: 'A vendor',
+    });
+
+    expect(requestBody(fetchMock.mock.calls[0]).input).toEqual({
+      name: 'Acme',
+      category: 'software',
+      subcategory: 'saas',
+      criticality: 'high',
+      dataSensitivity: 'confidential',
+      serviceAvailability: 'business_hours',
+      description: 'A vendor',
+    });
+  });
 });
 
 describe('vendor delete confirmation', () => {

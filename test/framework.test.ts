@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { clauseLinkCommand, clauseUpdateCommand } from '../src/commands/framework.js';
+import {
+  clauseAvailableItemsCommand,
+  clauseLinkCommand,
+  clauseUpdateCommand,
+} from '../src/commands/framework.js';
 import { apiUrl, jsonResponse, requestBody, setup } from './helpers.js';
 
 const preflight = (summary: string) =>
@@ -86,5 +90,50 @@ describe('clause link confirmation', () => {
       itemId: 't-1',
     });
     expect(second.confirmationToken).toBe('tok-clause');
+  });
+});
+
+describe('clause available pagination', () => {
+  it('passes page and limit and shows the page footer', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        status: 'ok',
+        data: {
+          frameworkId: 'f-1',
+          clauseId: 'c-1',
+          itemType: 'test',
+          items: [
+            { id: 't-1', name: 'T1' },
+            { id: 't-2', name: 'T2' },
+          ],
+          total: 40,
+          page: 1,
+          limit: 2,
+        },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const { io, out, store } = setup();
+
+    await clauseAvailableItemsCommand({
+      io,
+      credentialStore: store,
+      apiUrl,
+      framework: 'SOC 2',
+      clause: 'CC6.1',
+      itemType: 'test',
+      page: 1,
+      limit: 2,
+    });
+
+    expect(requestBody(fetchMock.mock.calls[0]).input).toEqual({
+      framework: 'SOC 2',
+      clause: 'CC6.1',
+      itemType: 'test',
+      page: 1,
+      limit: 2,
+    });
+    expect(out.text).toContain('of 40');
+    expect(out.text).toContain('next: --page 2');
   });
 });

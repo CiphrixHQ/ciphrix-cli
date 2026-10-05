@@ -1,4 +1,4 @@
-import { writeLine, writeNextHint, writeTable, type CliIO } from '../io.js';
+import { writeLine, writeNextHint, writePageFooter, writeTable, type CliIO } from '../io.js';
 import { asRecord, callTool, errorMessage, resolveToolContext, asText } from '../toolSurface.js';
 import type { CredentialStore } from '../credentials.js';
 
@@ -206,10 +206,19 @@ export const clauseAvailableItemsCommand = async ({
   json = false,
   credentialStore,
   search,
-}: ClauseTargetOptions & { itemType: string; search?: string | undefined }): Promise<void> => {
+  page,
+  limit,
+}: ClauseTargetOptions & {
+  itemType: string;
+  search?: string | undefined;
+  page?: number | undefined;
+  limit?: number | undefined;
+}): Promise<void> => {
   const ctx = await resolveToolContext(apiUrl, credentialStore);
   const input: Record<string, unknown> = { framework, clause, itemType };
   if (search) input.search = search;
+  if (page) input.page = page;
+  if (limit) input.limit = limit;
   const envelope = await callTool(ctx, 'list_clause_items_available', input);
   if (envelope.status !== 'ok')
     throw new Error(errorMessage(envelope, 'Could not read available items.'));
@@ -217,7 +226,8 @@ export const clauseAvailableItemsCommand = async ({
     writeLine(io.stdout, JSON.stringify(envelope.data, null, 2));
     return;
   }
-  const items = asRecord(envelope.data).items;
+  const data = asRecord(envelope.data);
+  const items = data.items;
   const list = Array.isArray(items) ? items : [];
   writeLine(
     io.stdout,
@@ -227,6 +237,16 @@ export const clauseAvailableItemsCommand = async ({
     const record = asRecord(item);
     writeLine(io.stdout, `  ${text(record.name, text(record.id))}`);
   }
+  const total = typeof data.total === 'number' ? data.total : list.length;
+  const currentPage = typeof data.page === 'number' ? data.page : 1;
+  const pageSize = typeof data.limit === 'number' ? data.limit : 25;
+  writePageFooter(io, {
+    shown: list.length,
+    total,
+    page: currentPage,
+    limit: pageSize,
+    hasMore: data.hasMore === true || currentPage * pageSize < total,
+  });
 };
 
 export const clauseUpdateCommand = async ({

@@ -26,6 +26,7 @@ export const controlListCommand = async ({
   domain,
   status,
   applicability,
+  ownerId,
   page,
   limit,
 }: ControlCommonOptions & {
@@ -33,6 +34,7 @@ export const controlListCommand = async ({
   domain?: string | undefined;
   status?: string | undefined;
   applicability?: string | undefined;
+  ownerId?: string | undefined;
   page?: number | undefined;
   limit?: number | undefined;
 }): Promise<void> => {
@@ -46,6 +48,11 @@ export const controlListCommand = async ({
       .map((value) => value.trim())
       .filter(Boolean);
   if (applicability) input.applicability = [applicability];
+  if (ownerId)
+    input.ownerId = ownerId
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
   if (page) input.page = page;
   if (limit) input.limit = limit;
 
@@ -228,6 +235,16 @@ export const controlAvailableItemsCommand = async ({
       return [text(record.name, text(record.id)), text(record.status)];
     }),
   );
+  const total = typeof data.total === 'number' ? data.total : items.length;
+  const currentPage = typeof data.page === 'number' ? data.page : 1;
+  const pageSize = typeof data.limit === 'number' ? data.limit : 25;
+  writePageFooter(io, {
+    shown: items.length,
+    total,
+    page: currentPage,
+    limit: pageSize,
+    hasMore: data.hasMore === true || currentPage * pageSize < total,
+  });
 };
 
 export const controlUpdateCommand = async ({
