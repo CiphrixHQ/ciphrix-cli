@@ -1,6 +1,6 @@
 {
   "name": "@ciphrix/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Official command-line interface for the Ciphrix compliance platform.",
   "type": "module",
   "license": "Apache-2.0",
