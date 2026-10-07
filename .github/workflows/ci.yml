@@ -48,7 +48,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Scan changed commits or full repository history for secrets
-        uses: trufflesecurity/trufflehog@b9dd330365132cd2d01dd5dc8a857a056a2544e1 # v3
+        uses: trufflesecurity/trufflehog@4dd8831c5f12599465d4d45c3c447b4018a34c85 # v3
         with:
           version: 3.95.3
           # The generic URI detector treats intentionally invalid URL test
