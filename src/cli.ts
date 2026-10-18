@@ -1,4 +1,6 @@
 import { Command, CommanderError } from 'commander';
+import { registerCapabilities, RenderedCommandError } from './commands/capabilities.js';
+import { asRecord } from './toolSurface.js';
 
 import { formatBanner } from './banner.js';
 import { loginCommand } from './commands/login.js';
@@ -354,7 +356,11 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
       });
     });
 
-  const testRun = test.command('run').description('Create, result and delete runs');
+  const testRun = test
+    .command('run')
+    .description(
+      'Run lifecycle, human results/notes, linked evidence references and advisory assessments',
+    );
 
   testRun
     .command('create <name>')
@@ -375,17 +381,26 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
   testRun
     .command('result <name>')
     .description('Record a run result: passing | failing | skipped | pending (reopen)')
-    .requiredOption('--status <status>', 'passing | failing | skipped | pending')
+    .option(
+      '--status <status>',
+      'human-decided result: passing | failing | skipped | pending; omit for note-only changes',
+    )
     .option('--note <text>', 'note for the run')
+    .option('--clear-note', 'clear the note without changing the result; conflicts with --note')
     .option('--run <id>', 'a specific run')
     .option('--api-url <url>', 'override the API base URL for this command')
     .option('--json', 'output raw JSON')
     .action(async (name: string, options: unknown) => {
+      if (
+        readBooleanOption(options, 'clearNote') &&
+        readStringOption(options, 'note') !== undefined
+      )
+        throw new Error('--clear-note conflicts with --note.');
       await testRunResultCommand({
         io,
         name,
-        status: readStringOption(options, 'status') ?? '',
-        note: readStringOption(options, 'note'),
+        status: readStringOption(options, 'status'),
+        note: readBooleanOption(options, 'clearNote') ? null : readStringOption(options, 'note'),
         runId: readStringOption(options, 'run'),
         apiUrl: readStringOption(options, 'apiUrl'),
         json: readBooleanOption(options, 'json'),
@@ -981,11 +996,18 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
 
   const control = program
     .command('control')
-    .description('Controls: status, applicability, owner and design requirements');
+    .description(
+      'Controls: status, applicability, ownership, design requirements and advisory assessments',
+    );
 
   control
     .command('list')
     .description('List controls with their status, applicability and owner')
+    .option(
+      '--framework <code>',
+      'filter by catalogue framework code; repeat for multiple values',
+      (value: string, previous: string[] = []) => [...previous, value],
+    )
     .option('--search <text>', 'filter by name or code')
     .option('--domain <value>', 'filter by control domain')
     .option('--status <csv>', 'filter by status')
@@ -998,6 +1020,9 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
     .action(async (options: unknown) => {
       await controlListCommand({
         io,
+        framework: Array.isArray(asRecord(options).framework)
+          ? (asRecord(options).framework as string[])
+          : undefined,
         search: readStringOption(options, 'search'),
         domain: readStringOption(options, 'domain'),
         status: readStringOption(options, 'status'),
@@ -1738,6 +1763,8 @@ export const createProgram = (io: CliIO = createDefaultIO()): Command => {
       });
     });
 
+  registerCapabilities(program, io);
+
   // A bare `ciphrix` shows the banner and help; commands never print the banner.
   program.action(() => {
     writeBlock(io.stdout, `${formatBanner(io.theme)}\n\n`);
@@ -1767,6 +1794,7 @@ export const main = async (
     await program.parseAsync([...argv]);
     return 0;
   } catch (error) {
+    if (error instanceof RenderedCommandError) return 1;
     if (error instanceof CommanderError) {
       return error.exitCode;
     }

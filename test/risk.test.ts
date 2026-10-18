@@ -1,3 +1,4 @@
+import { withLegacyManifest } from './legacyManifest.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { riskListCommand, riskUpdateCommand } from '../src/commands/risk.js';
@@ -40,26 +41,28 @@ describe('risk list', () => {
   it('renders a table with a pagination footer', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(
-        jsonResponse({
-          status: 'ok',
-          data: {
-            total: 15,
-            page: 1,
-            limit: 25,
-            hasMore: false,
-            risks: [
-              {
-                id: 'r-1',
-                title: 'Cloud permission sprawl',
-                status: 'open',
-                category: 'technology',
-                businessUnit: 'Eng',
-                score: 16,
-              },
-            ],
-          },
-        }),
+      withLegacyManifest(
+        vi.fn().mockResolvedValue(
+          jsonResponse({
+            status: 'ok',
+            data: {
+              total: 15,
+              page: 1,
+              limit: 25,
+              hasMore: false,
+              risks: [
+                {
+                  id: 'r-1',
+                  title: 'Cloud permission sprawl',
+                  status: 'open',
+                  category: 'technology',
+                  businessUnit: 'Eng',
+                  score: 16,
+                },
+              ],
+            },
+          }),
+        ),
       ),
     );
     const { io, out, store } = setup();
@@ -78,7 +81,7 @@ describe('risk update', () => {
       .mockResolvedValue(
         jsonResponse({ status: 'ok', data: { id: 'r-1', applied: ['status'], failed: [] } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, out, store } = setup();
 
     await riskUpdateCommand({
@@ -106,13 +109,15 @@ describe('risk update', () => {
   it('surfaces a tool error', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(
-        jsonResponse(
-          {
-            status: 'error',
-            error: { code: 'forbidden_scope', message: 'Missing scope: risk:write' },
-          },
-          403,
+      withLegacyManifest(
+        vi.fn().mockResolvedValue(
+          jsonResponse(
+            {
+              status: 'error',
+              error: { code: 'forbidden_scope', message: 'Missing scope: risk:write' },
+            },
+            403,
+          ),
         ),
       ),
     );

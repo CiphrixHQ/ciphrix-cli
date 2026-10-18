@@ -1,6 +1,8 @@
+import { withLegacyManifest } from './legacyManifest.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { callTool, resolveToolContext, WRITE_TOOL_NAMES } from '../src/toolSurface.js';
+import { callTool, resolveToolContext } from '../src/toolSurface.js';
+import { getManifest } from '../src/manifest.js';
 import { apiUrl, jsonResponse, requestBody, setup } from './helpers.js';
 
 afterEach(() => {
@@ -10,7 +12,7 @@ afterEach(() => {
 describe('tool surface write guard', () => {
   it('refuses a write tool without an idempotency key, before any request', async () => {
     const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { store } = setup();
     const ctx = await resolveToolContext(apiUrl, store);
 
@@ -26,7 +28,7 @@ describe('tool surface write guard', () => {
 
   it('lets a read through without an idempotency key', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ status: 'ok', data: {} }));
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { store } = setup();
     const ctx = await resolveToolContext(apiUrl, store);
 
@@ -38,7 +40,7 @@ describe('tool surface write guard', () => {
 
   it('sends the idempotency key for a write when one is supplied', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ status: 'ok', data: {} }));
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { store } = setup();
     const ctx = await resolveToolContext(apiUrl, store);
 
@@ -52,7 +54,11 @@ describe('tool surface write guard', () => {
     expect(requestBody(fetchMock.mock.calls[0]).idempotencyKey).toBe('idem-1');
   });
 
-  it('covers the write tools the commands use', () => {
+  it('discovers the write effects the commands use from the manifest', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
+    const { store } = setup();
+    const tools = await getManifest(await resolveToolContext(apiUrl, store));
     for (const name of [
       'set_context_answer',
       'create_document',
@@ -67,7 +73,7 @@ describe('tool surface write guard', () => {
       'create_asset',
       'set_asset_tag',
     ]) {
-      expect(WRITE_TOOL_NAMES.has(name)).toBe(true);
+      expect(tools.find((tool) => tool.name === name)?.effect).toBe('write');
     }
   });
 });

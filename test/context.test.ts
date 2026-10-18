@@ -1,3 +1,4 @@
+import { withLegacyManifest } from './legacyManifest.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { contextResetCommand, contextSetCommand } from '../src/commands/context.js';
@@ -44,7 +45,7 @@ describe('context set', () => {
         data: { store: 'business', questionId: 'company_size', saved: true },
       }),
     );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, out, store } = setup();
 
     await contextSetCommand({
@@ -67,14 +68,16 @@ describe('context set', () => {
   it('surfaces a tool error', async () => {
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue(
-          jsonResponse(
-            { status: 'error', error: { code: 'invalid_input', message: 'Invalid value' } },
-            400,
+      withLegacyManifest(
+        vi
+          .fn()
+          .mockResolvedValue(
+            jsonResponse(
+              { status: 'error', error: { code: 'invalid_input', message: 'Invalid value' } },
+              400,
+            ),
           ),
-        ),
+      ),
     );
     const { io, store } = setup();
 
@@ -106,7 +109,7 @@ describe('context reset', () => {
       .mockResolvedValueOnce(
         jsonResponse({ status: 'ok', data: { store: 'business', status: 'reset' } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, out, store } = setup();
 
     await contextResetCommand({ io, credentialStore: store, apiUrl, yes: true });
@@ -134,7 +137,7 @@ describe('context reset', () => {
         meta: { confirmation: { token: 'tok-1', summary: 'Reset all Business Context answers.' } },
       }),
     );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, out, store } = setup();
 
     await contextResetCommand({

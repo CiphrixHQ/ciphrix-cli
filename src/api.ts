@@ -1,12 +1,22 @@
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string | undefined;
+  readonly details: unknown;
+  readonly envelope: unknown;
 
-  constructor(message: string, status: number, code: string | undefined = undefined) {
+  constructor(
+    message: string,
+    status: number,
+    code: string | undefined = undefined,
+    details: unknown = undefined,
+    envelope: unknown = undefined,
+  ) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.code = code;
+    this.details = details;
+    this.envelope = envelope;
   }
 }
 
@@ -108,7 +118,7 @@ export const fetchWithoutRedirects = async (url: string, init: RequestInit): Pro
 
 const errorPayload = (
   data: unknown,
-): { message: string | undefined; code: string | undefined; details: unknown[] } => {
+): { message: string | undefined; code: string | undefined; details: unknown } => {
   if (!data || typeof data !== 'object')
     return { message: undefined, code: undefined, details: [] };
   const record = data as Record<string, unknown>;
@@ -134,7 +144,7 @@ const errorPayload = (
         : typeof nested?.code === 'string'
           ? nested.code
           : undefined;
-  const details = Array.isArray(nested?.details) ? (nested?.details as unknown[]) : [];
+  const details = nested?.details;
   return { message, code, details };
 };
 
@@ -206,9 +216,15 @@ export const createApiClient = (baseUrl: string, limits: RequestLimits = {}): Ap
       if (!response.ok) {
         const { message, code, details } = errorPayload(data);
         throw new ApiError(
-          withDetails(message || `Request failed with status ${response.status}`, code, details),
+          withDetails(
+            message || `Request failed with status ${response.status}`,
+            code,
+            Array.isArray(details) ? details : [],
+          ),
           response.status,
           code,
+          details,
+          data,
         );
       }
 

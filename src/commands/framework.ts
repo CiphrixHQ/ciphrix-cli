@@ -61,7 +61,11 @@ export const frameworkListCommand = async ({
     writeLine(io.stdout, `${io.theme.dim(`Available to add (${available.length}):`)}`);
     for (const framework of available) {
       const record = asRecord(framework);
-      writeLine(io.stdout, `  ${text(record.frameworkName ?? record.name)}`);
+      const code = asText(record.frameworkCode ?? record.code);
+      writeLine(
+        io.stdout,
+        `  ${code ? `${code} — ` : ''}${text(record.frameworkName ?? record.name)}`,
+      );
     }
   }
 };

@@ -72,8 +72,8 @@ changes show the proposed action and ask for confirmation; automation can opt in
 - **Manage operational registers** — work with assets, vendors, risks, treatments, ownership, and files.
 - **Operate monitoring** — inspect checks, resources, runs, findings, integrations, and background jobs.
 
-Names and stable Ciphrix codes are accepted throughout, so neither people nor agents need to work with
-opaque database identifiers.
+Established record commands accept names and stable Ciphrix codes where advertised. Access inventory,
+review tasks and proposals require the exact IDs returned by their read commands; never guess identifiers.
 
 ## Built for agent workspaces
 
@@ -99,7 +99,9 @@ The skill works with compatible agent harnesses including Codex, Claude Code, Cu
 is also included in the npm package at [`skills/ciphrix/SKILL.md`](skills/ciphrix/SKILL.md). Installing
 the npm package never modifies an agent's configuration directories.
 
-Run `npx skills update` to update installed skills when a newer version is available.
+Run `npx skills update` to update installed skills when a newer version is available. Keep the skill
+aligned with your installed CLI version; its generated command reference and local help describe the
+available grammar. Server capability discovery remains authoritative for which operations you can use.
 
 ### Ask in natural language, operate through the CLI
 
@@ -154,6 +156,47 @@ one command. Installed help is authoritative. The complete generated reference i
 | `ciphrix job status <jobId>`                       | Follow background work started by another command.                             |
 
 </details>
+
+### Context, reviews and agent-assisted work
+
+The onboarding group reads separate Business and Operating Context, saves agreed questionnaire answers,
+and offers explicit optional setup and completion. Business Context readiness is decided by the server;
+Operating Context and optional setup do not block journey completion. Saving context never automatically
+starts agents or completes the journey. Local `--help` works offline; `onboarding --help-onboarding`
+returns authenticated server guidance and the current status pack.
+
+The access group separates inventory, reviewed import proposals, assigned reviewer decisions and campaign
+results. A revoke decision records a removal request, not provider-side revocation. Recording decisions,
+completing a reviewer task, and ending a campaign are separate operations. Imports merge only explicitly
+selected reviewed rows; inspect per-row failures even when some rows applied.
+
+Agent findings and advisory test/control assessments do not make formal human decisions. Assigned-task
+discovery does not complete work. File staging and processing are explicit, separate operations; processing
+may update context or create vendors. Evidence/CSV commands return expiring signed references without
+automatically downloading files. Use each command's help for the exact inputs, next reads and effects.
+
+### Manifest compatibility, JSON and retries
+
+The CLI discovers allowed tools and their effects from the authenticated server manifest. New command
+groups require server-declared command bindings. An unavailable binding is reported as unsupported;
+the CLI never guesses a different endpoint or interprets the manifest as authorization. Existing
+commands keep their successful JSON formats. New capability commands emit complete success/error
+envelopes with `--json`, preserving warnings, pagination, truncation and structured error details.
+Failures and partially applied mutations return a nonzero exit status.
+
+Confirmed writes require explicit consent. New commands in JSON/non-interactive mode require `--yes`
+for confirmed operations; immediate writes do not accept that flag. Write controls are rejected for
+reads. The optional `--idempotency-key` names one logical write: reuse identical input for a retry,
+never a new key to bypass an unknown outcome. There are no automatic write retries. Confirmed replay
+also needs a valid confirmation token; a fresh invocation re-preflights and may be blocked by changed
+state or expiry. The CLI does not save confirmation tokens or promise recovery across invocations.
+Inspect current records/jobs when uncertain. Replayed status packs and signed URLs are original
+snapshots, not refreshed state or renewed downloads.
+
+Mutation JSON files must be regular files, at most 1 MiB, containing an explicitly selected array.
+Use clear flags or JSON null where supported, not the string `"null"`. Do not infer confirmations
+from suggested matches. New repeated flags collect separate values; existing command conventions remain
+compatible. See the generated command reference for all options and nested payload details.
 
 ## Safe by default
 

@@ -23,6 +23,7 @@ export const controlListCommand = async ({
   json = false,
   credentialStore,
   search,
+  framework,
   domain,
   status,
   applicability,
@@ -31,6 +32,7 @@ export const controlListCommand = async ({
   limit,
 }: ControlCommonOptions & {
   search?: string | undefined;
+  framework?: string[] | undefined;
   domain?: string | undefined;
   status?: string | undefined;
   applicability?: string | undefined;
@@ -41,6 +43,7 @@ export const controlListCommand = async ({
   const ctx = await resolveToolContext(apiUrl, credentialStore);
   const input: Record<string, unknown> = {};
   if (search) input.search = search;
+  if (framework !== undefined) input.framework = framework;
   if (domain) input.domain = [domain];
   if (status)
     input.status = status
@@ -133,6 +136,14 @@ export const controlGetCommand = async ({
   for (const [label, value] of fields) {
     if (value === undefined || value === null || value === '') continue;
     writeLine(io.stdout, `  ${io.theme.dim(`${label}:`)} ${text(value)}`);
+  }
+  if (Array.isArray(control.complianceMap) && control.complianceMap.length > 0) {
+    writeLine(io.stdout, 'Catalogue framework relationships (not a compliance assessment):');
+    writeLine(io.stdout, JSON.stringify(control.complianceMap, null, 2));
+  }
+  if (control.items !== undefined) {
+    writeLine(io.stdout, 'Linked items:');
+    writeLine(io.stdout, JSON.stringify(control.items, null, 2));
   }
   if (typeof control.notes === 'string' && control.notes.trim() !== '') {
     writeLine(io.stdout);
