@@ -112,7 +112,7 @@ const render = (
   envelope: Record<string, unknown>,
   next: string,
 ): void => {
-  if (json) io.stdout.write(`${JSON.stringify(envelope)}\n`);
+  if (json) writeLine(io.stdout, JSON.stringify(envelope));
   else {
     writeLine(io.stdout, JSON.stringify(envelope.data ?? envelope, null, 2));
     if (Array.isArray(envelope.warnings))
@@ -140,7 +140,7 @@ const run = async (
       applying = true;
     });
     if (!envelope) {
-      if (options.json) io.stdout.write(`${JSON.stringify({ status: 'cancelled' })}\n`);
+      if (options.json) writeLine(io.stdout, JSON.stringify({ status: 'cancelled' }));
       return;
     }
     render(io, options.json === true, envelope, next);

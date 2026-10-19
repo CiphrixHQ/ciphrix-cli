@@ -74,6 +74,46 @@ const fixture = (path: string, effect = 'read', confirmation = 'none') => {
 };
 
 describe('capability grammar and manifest-owned dispatch', () => {
+  it.each([
+    { status: 'ok', httpStatus: 200 },
+    { status: 'error', httpStatus: 200 },
+    { status: 'error', httpStatus: 409 },
+  ])(
+    'preserves safe single-line JSON for $status envelopes over HTTP $httpStatus',
+    async ({ status, httpStatus }) => {
+      const test = fixture('task list');
+      const controls = Array.from({ length: 32 }, (_unused, index) =>
+        String.fromCharCode(0x80 + index),
+      ).join('');
+      const value = `Synthetic ${controls} value\nwith a newline`;
+      const envelope = {
+        status,
+        ...(status === 'ok'
+          ? { data: { label: value, nested: [{ [value]: value }] }, warnings: [value] }
+          : { error: { code: 'invalid_state', message: value, details: { [value]: value } } }),
+      };
+      const original = test.fetchMock.getMockImplementation()!;
+      test.fetchMock.mockImplementation((url, init) =>
+        url.endsWith('/tools/v1')
+          ? original(url, init)
+          : Promise.resolve(jsonResponse(envelope, httpStatus)),
+      );
+      const invocation = test.program.parseAsync(['task', 'list', '--json'], { from: 'user' });
+      if (status === 'ok') await invocation;
+      else await expect(invocation).rejects.toBeInstanceOf(RenderedCommandError);
+      expect(
+        [...test.out.text].some((character) => {
+          const code = character.charCodeAt(0);
+          return code >= 0x80 && code <= 0x9f;
+        }),
+      ).toBe(false);
+      expect(test.out.text.split('\n')).toHaveLength(2);
+      expect(test.out.text.endsWith('\n')).toBe(true);
+      expect(JSON.parse(test.out.text)).toEqual(envelope);
+      expect(test.err.text).toBe('');
+    },
+  );
+
   it('rejects an invalid write key before resolving capabilities or applying a change', async () => {
     const test = fixture('file process', 'write');
     await expect(
