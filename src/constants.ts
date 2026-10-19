@@ -4,4 +4,4 @@
  */
 export const CLI_NAME = 'ciphrix';
 export const CLI_TAGLINE = 'Ciphrix compliance platform CLI';
-export const CLI_VERSION = '0.1.1';
+export const CLI_VERSION = '0.2.0';

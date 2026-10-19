@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-19
+
 ### Added
 
 - Onboarding status, questionnaire help and answer setting, optional initial agents/framework setup,
@@ -24,6 +26,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   client-maintained tool-name list. Unsupported capabilities fail without an alternate endpoint fallback.
 - Test-run notes can be edited or cleared without changing the recorded result. Control lists accept
   repeatable framework filters. Existing successful command JSON formats remain unchanged.
+
+### Compatibility
+
+- New capability commands require matching CLI bindings in the authenticated API manifest. Until the
+  server advertises a binding, the command reports it as unsupported without an endpoint fallback.
 
 ## [0.1.1] - 2026-10-05
 
