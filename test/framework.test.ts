@@ -1,3 +1,4 @@
+import { withLegacyManifest } from './legacyManifest.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -29,7 +30,7 @@ describe('clause update confirmation', () => {
           data: { frameworkId: 'f-1', clauseId: 'c-1', applied: ['applicability'] },
         }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await clauseUpdateCommand({
@@ -64,7 +65,7 @@ describe('clause link confirmation', () => {
       .mockResolvedValueOnce(
         jsonResponse({ status: 'ok', data: { frameworkId: 'f-1', clauseId: 'c-1' } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await clauseLinkCommand({
@@ -112,7 +113,7 @@ describe('clause available pagination', () => {
         },
       }),
     );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, out, store } = setup();
 
     await clauseAvailableItemsCommand({

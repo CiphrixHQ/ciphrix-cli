@@ -1,3 +1,4 @@
+import { withLegacyManifest } from './legacyManifest.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { policyGetCommand, policyListCommand } from '../src/commands/policy.js';
@@ -40,15 +41,17 @@ describe('policy list', () => {
   it('renders a table with counts', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(
-        jsonResponse({
-          status: 'ok',
-          data: {
-            total: 1,
-            counts: { draft: 1 },
-            policies: [{ id: 'p-1', name: 'Backup Policy', status: 'draft', isPublished: false }],
-          },
-        }),
+      withLegacyManifest(
+        vi.fn().mockResolvedValue(
+          jsonResponse({
+            status: 'ok',
+            data: {
+              total: 1,
+              counts: { draft: 1 },
+              policies: [{ id: 'p-1', name: 'Backup Policy', status: 'draft', isPublished: false }],
+            },
+          }),
+        ),
       ),
     );
     const { io, out, store } = setup();
@@ -76,13 +79,16 @@ describe('policy get', () => {
         },
       }),
     );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, out, store } = setup();
 
     await policyGetCommand({ io, store, apiUrl, policy: 'Backup Policy' });
 
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(JSON.parse(init.body as string)).toEqual({ input: { name: 'Backup Policy' } });
+    expect(JSON.parse(init.body as string)).toEqual({
+      input: { name: 'Backup Policy' },
+      version: 1,
+    });
     expect(out.text).toContain('Backup Policy');
     expect(out.text).toContain('Nightly backups.');
   });
@@ -93,7 +99,7 @@ describe('policy get', () => {
       .mockResolvedValue(
         jsonResponse({ status: 'ok', data: { policy: { name: 'X', currentVersion: {} } } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await policyGetCommand({ io, store, apiUrl, policy: '11111111-1111-1111-1111-111111111111' });
@@ -101,20 +107,23 @@ describe('policy get', () => {
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(JSON.parse(init.body as string)).toEqual({
       input: { policyId: '11111111-1111-1111-1111-111111111111' },
+      version: 1,
     });
   });
 
   it('surfaces a not-found error', async () => {
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue(
-          jsonResponse(
-            { status: 'error', error: { code: 'not_found', message: 'Policy not found' } },
-            404,
+      withLegacyManifest(
+        vi
+          .fn()
+          .mockResolvedValue(
+            jsonResponse(
+              { status: 'error', error: { code: 'not_found', message: 'Policy not found' } },
+              404,
+            ),
           ),
-        ),
+      ),
     );
     const { io, store } = setup();
 
@@ -128,16 +137,18 @@ describe('policy list --json', () => {
   it('emits the data payload without the response envelope', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(
-        jsonResponse({
-          status: 'ok',
-          data: {
-            total: 1,
-            counts: { draft: 1 },
-            policies: [{ id: 'p-1', name: 'Backup Policy' }],
-          },
-          meta: { total: 1 },
-        }),
+      withLegacyManifest(
+        vi.fn().mockResolvedValue(
+          jsonResponse({
+            status: 'ok',
+            data: {
+              total: 1,
+              counts: { draft: 1 },
+              policies: [{ id: 'p-1', name: 'Backup Policy' }],
+            },
+            meta: { total: 1 },
+          }),
+        ),
       ),
     );
     const { io, out, store } = setup();

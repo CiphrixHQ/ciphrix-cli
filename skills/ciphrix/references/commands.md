@@ -28,12 +28,23 @@ Commands:
   framework              Applied frameworks
   asset                  The asset register
   vendor                 Manage vendors
-  control                Controls: status, applicability, owner and design
-                         requirements
+  control                Controls: status, applicability, ownership, design
+                         requirements and advisory assessments
   document               Browse, read and change documents
   risk                   Manage risks
   check                  Monitoring checks
   job                    Check background jobs started by other commands
+  access                 Access inventory, reviewed imports and assigned
+                         reviewer workflows
+  agent                  Agent activity, complete proposals and explicit human
+                         decisions
+  task                   Your assigned stored work; discovery never completes
+                         tasks
+  file                   Owned local-file staging and explicit processing; no
+                         automatic downloads
+  onboarding [options]   Learn organizational context, inspect optional setup
+                         and explicitly complete the journey. Operating Context
+                         does not block completion.
 Configuration:
   --api-url <url>                 override the API base URL for one command
   CIPHRIX_API_URL                 default API base URL for this process
@@ -172,7 +183,8 @@ Commands:
                               to the current run)
   attach [options] <name>     Attach evidence to a run (defaults to the current
                               run)
-  run                         Create, result and delete runs
+  run                         Run lifecycle, human results/notes, linked
+                              evidence references and advisory assessments
   available [options] <name>  List items available to attach to a run (defaults
                               to the current run)
   links [options] <name>      Show the controls and clauses a test covers
@@ -265,7 +277,8 @@ Options:
 ```text
 Usage: ciphrix test run [options] [command]
 
-Create, result and delete runs
+Run lifecycle, human results/notes, linked evidence references and advisory
+assessments
 
 Options:
   -h, --help               display help for command
@@ -275,6 +288,10 @@ Commands:
   result [options] <name>  Record a run result: passing | failing | skipped |
                            pending (reopen)
   delete [options] <name>  Delete a run
+  file [options] <name>    Create a temporary reference for evidence linked to
+                           this test/run; no automatic download.
+  assess [options] <name>  Request advisory AI assessment; does not change the
+                           human run result.
   help [command]           display help for command
 ```
 
@@ -302,15 +319,18 @@ Usage: ciphrix test run result [options] <name>
 Record a run result: passing | failing | skipped | pending (reopen)
 
 Options:
-  --status <status>  passing | failing | skipped | pending
+  --status <status>  human-decided result: passing | failing | skipped |
+                     pending; omit for note-only changes
   --note <text>      note for the run
+  --clear-note       clear the note without changing the result; conflicts with
+                     --note
   --run <id>         a specific run
   --api-url <url>    override the API base URL for this command
   --json             output raw JSON
   -h, --help         display help for command
 ```
 
-**Effect:** Records a formal test-run result; the CLI prompts if the API requests confirmation.
+**Effect:** Records a human-decided result or changes/clears its note independently; a note-only update never changes the result.
 
 ## `ciphrix test run delete`
 
@@ -328,6 +348,53 @@ Options:
 ```
 
 **Effect:** Deletes the selected test run; the CLI asks for confirmation when required.
+
+## `ciphrix test run file`
+
+```text
+Usage: ciphrix test run file [options] <name>
+
+Create a temporary reference for evidence linked to this test/run; no automatic
+download.
+
+Options:
+  --attachment <value>     evidence attachment ID belonging to the selected test
+                           run
+  --run <value>            existing run ID; omit to use the current run
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix test run assess`
+
+```text
+Usage: ciphrix test run assess [options] <name>
+
+Request advisory AI assessment; does not change the human run result.
+
+Options:
+  --run <value>            existing run ID; omit to use the current run
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
 
 ## `ciphrix test available`
 
@@ -880,7 +947,8 @@ Options:
 ```text
 Usage: ciphrix control [options] [command]
 
-Controls: status, applicability, owner and design requirements
+Controls: status, applicability, ownership, design requirements and advisory
+assessments
 
 Options:
   -h, --help                         display help for command
@@ -894,6 +962,10 @@ Commands:
   update [options] <control>         Change owner, applicability, design
                                      requirements or notes
   link [options] <control> <itemId>  Link a test or document to a control
+  assess [options] <name>            Request/reuse advisory assessment. A cached
+                                     result may have no job ID.
+  assessment [options] <name>        Read advisory assessment/progress; absence
+                                     means not assessed, not compliant.
   help [command]                     display help for command
 ```
 
@@ -905,6 +977,8 @@ Usage: ciphrix control list [options]
 List controls with their status, applicability and owner
 
 Options:
+  --framework <code>       filter by catalogue framework code; repeat for
+                           multiple values
   --search <text>          filter by name or code
   --domain <value>         filter by control domain
   --status <csv>           filter by status
@@ -1004,6 +1078,48 @@ Options:
 ```
 
 **Effect:** Links or unlinks a test or document to a control; the CLI asks for confirmation when required.
+
+## `ciphrix control assess`
+
+```text
+Usage: ciphrix control assess [options] <name>
+
+Request/reuse advisory assessment. A cached result may have no job ID.
+
+Options:
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix control assessment`
+
+```text
+Usage: ciphrix control assessment [options] <name>
+
+Read advisory assessment/progress; absence means not assessed, not compliant.
+
+Options:
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
 
 ## `ciphrix document`
 
@@ -1584,6 +1700,1114 @@ Options:
   --json           output raw JSON
   -h, --help       display help for command
 ```
+
+## `ciphrix access`
+
+```text
+Usage: ciphrix access [options] [command]
+
+Access inventory, reviewed imports and assigned reviewer workflows
+
+Options:
+  -h, --help      display help for command
+
+Commands:
+  resource        Resources, owners and asset relationships
+  entry           Revisioned access inventory; inventory edits are not review
+                  decisions
+  import          Your import proposals, selected-row merges and explicit
+                  discard
+  review          Review campaigns, assigned decisions, completion and frozen
+                  outcomes
+  help [command]  display help for command
+```
+
+## `ciphrix access resource`
+
+```text
+Usage: ciphrix access resource [options] [command]
+
+Resources, owners and asset relationships
+
+Options:
+  -h, --help                                   display help for command
+
+Commands:
+  list [options]                               List review inventory resources and owners.
+  get [options] <resourceId>                   Read a resource and its current inventory context.
+  create [options]                             Create manual inventory; reconcile active reviews.
+  update [options] <resourceId>                Update inventory. Inactivation also deactivates child access.
+  link-asset [options] <resourceId> <assetId>  Link or unlink an existing asset; reconcile reviews.
+  bulk-update [options]                        Update selected resource owners/statuses; inspect per-row failures.
+  help [command]                               display help for command
+```
+
+## `ciphrix access resource list`
+
+```text
+Usage: ciphrix access resource list [options]
+
+List review inventory resources and owners.
+
+Options:
+  --page <value>           page number starting at 1
+  --limit <value>          page size; server limits apply
+  --search <value>         search visible records
+  --sort-by <value>        server-supported sort field
+  --sort-order <value>     sort direction: asc or desc
+  --status <value>         inventory status: active or inactive; review/agent
+                           operations use their own status vocabulary
+  --owner-person <value>   existing People ID for the resource owner
+  --include-empty          include resources with no access entries
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access resource get`
+
+```text
+Usage: ciphrix access resource get [options] <resourceId>
+
+Read a resource and its current inventory context.
+
+Options:
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access resource create`
+
+```text
+Usage: ciphrix access resource create [options]
+
+Create manual inventory; reconcile active reviews.
+
+Options:
+  --name <value>           record name
+  --website <value>        resource website
+  --owner-person <value>   existing People ID for the resource owner
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access resource update`
+
+```text
+Usage: ciphrix access resource update [options] <resourceId>
+
+Update inventory. Inactivation also deactivates child access.
+
+Options:
+  --expected-updated-at <value>  exact updatedAt timestamp from the latest read
+  --name <value>                 record name
+  --website <value>              resource website
+  --clear-website                clear the website; conflicts with --website
+  --owner-person <value>         existing People ID for the resource owner
+  --clear-owner                  clear the owner; conflicts with --owner-person
+  --status <value>               inventory status: active or inactive;
+                                 review/agent operations use their own status
+                                 vocabulary
+  --api-url <url>                override the API base URL
+  --json                         emit one complete result/error envelope
+  --yes                          confirmed writes only: explicitly authorize
+                                 without prompting; rejected on reads/immediate
+                                 writes
+  --idempotency-key <key>        writes only: key for one logical operation;
+                                 reuse identical input, at most 256 characters
+  -h, --help                     display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access resource link-asset`
+
+```text
+Usage: ciphrix access resource link-asset [options] <resourceId> <assetId>
+
+Link or unlink an existing asset; reconcile reviews.
+
+Options:
+  --action <value>         explicit link or unlink action
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access resource bulk-update`
+
+```text
+Usage: ciphrix access resource bulk-update [options]
+
+Update selected resource owners/statuses; inspect per-row failures.
+
+Options:
+  --resource <value>       existing resource ID; repeat for multiple selections
+                           where supported
+  --owner-person <value>   existing People ID for the resource owner
+  --clear-owner            clear the owner; conflicts with --owner-person
+  --status <value>         inventory status: active or inactive; review/agent
+                           operations use their own status vocabulary
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access entry`
+
+```text
+Usage: ciphrix access entry [options] [command]
+
+Revisioned access inventory; inventory edits are not review decisions
+
+Options:
+  -h, --help                   display help for command
+
+Commands:
+  list [options]               List current access inventory; no review
+                               decisions are recorded.
+  get [options] <accessId>     Read current inventory revision and prior review
+                               outcome.
+  create [options]             Create manual access inventory, not a review
+                               decision.
+  update [options] <accessId>  Update revisioned inventory; integration-owned
+                               fields stay locked.
+  bulk-update [options]        Update one field on selected revisioned entries;
+                               inspect partial failures.
+  help [command]               display help for command
+```
+
+## `ciphrix access entry list`
+
+```text
+Usage: ciphrix access entry list [options]
+
+List current access inventory; no review decisions are recorded.
+
+Options:
+  --page <value>             page number starting at 1
+  --limit <value>            page size; server limits apply
+  --search <value>           search visible records
+  --sort-by <value>          server-supported sort field
+  --sort-order <value>       sort direction: asc or desc
+  --resource <value>         existing resource ID; repeat for multiple
+                             selections where supported
+  --person <value>           existing People ID for the access identity
+  --owner-person <value>     existing People ID for the resource owner
+  --status <value>           inventory status: active or inactive; review/agent
+                             operations use their own status vocabulary
+  --review-state <value>     inventory: needs_review, pending, keep, revoke or
+                             inactive; reviewer task: pending or all
+  --reviewed-before <value>  ISO review-history cutoff
+  --api-url <url>            override the API base URL
+  --json                     emit one complete result/error envelope
+  --yes                      confirmed writes only: explicitly authorize without
+                             prompting; rejected on reads/immediate writes
+  --idempotency-key <key>    writes only: key for one logical operation; reuse
+                             identical input, at most 256 characters
+  -h, --help                 display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access entry get`
+
+```text
+Usage: ciphrix access entry get [options] <accessId>
+
+Read current inventory revision and prior review outcome.
+
+Options:
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access entry create`
+
+```text
+Usage: ciphrix access entry create [options]
+
+Create manual access inventory, not a review decision.
+
+Options:
+  --resource <value>       existing resource ID; repeat for multiple selections
+                           where supported
+  --identity <value>       reported account identity; does not change
+                           authentication
+  --role <value>           inventory access role; does not change product
+                           authorization
+  --person <value>         existing People ID for the access identity
+  --status <value>         inventory status: active or inactive; review/agent
+                           operations use their own status vocabulary
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access entry update`
+
+```text
+Usage: ciphrix access entry update [options] <accessId>
+
+Update revisioned inventory; integration-owned fields stay locked.
+
+Options:
+  --expected-revision <value>  current revision from the latest entry or
+                               reviewer-task read
+  --identity <value>           reported account identity; does not change
+                               authentication
+  --role <value>               inventory access role; does not change product
+                               authorization
+  --person <value>             existing People ID for the access identity
+  --clear-person               leave the identity unmatched; conflicts with
+                               --person
+  --status <value>             inventory status: active or inactive;
+                               review/agent operations use their own status
+                               vocabulary
+  --api-url <url>              override the API base URL
+  --json                       emit one complete result/error envelope
+  --yes                        confirmed writes only: explicitly authorize
+                               without prompting; rejected on reads/immediate
+                               writes
+  --idempotency-key <key>      writes only: key for one logical operation; reuse
+                               identical input, at most 256 characters
+  -h, --help                   display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access entry bulk-update`
+
+```text
+Usage: ciphrix access entry bulk-update [options]
+
+Update one field on selected revisioned entries; inspect partial failures.
+
+Options:
+  --rows-file <value>      JSON array of explicitly selected rows; regular file,
+                           at most 1 MiB
+  --field <value>          single inventory field to update on every selected
+                           row
+  --value <value>          strict JSON value; quote strings as JSON and use null
+                           only where supported
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Rows: [{accessId, expectedRevision}]. Only update is exposed. field selects identity, personId, role or status; value is a JSON string, or null to clear personId. Each row can fail independently.
+
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access import`
+
+```text
+Usage: ciphrix access import [options] [command]
+
+Your import proposals, selected-row merges and explicit discard
+
+Options:
+  -h, --help                    display help for command
+
+Commands:
+  start [options]               Extract a proposal from owned register_import
+                                uploads; does not merge.
+  list [options]                List your unresolved imports using cursor
+                                pagination.
+  get [options] <importId>      Inspect proposal rows, matches, evidence and
+                                revisions before merging.
+  merge [options] <importId>    Merge only reviewed selected rows; preserve
+                                corrections and explicit confirmations.
+  discard [options] <importId>  Stop extraction/merge; retain successful merges
+                                and independent enrichment.
+  help [command]                display help for command
+```
+
+## `ciphrix access import start`
+
+```text
+Usage: ciphrix access import start [options]
+
+Extract a proposal from owned register_import uploads; does not merge.
+
+Options:
+  --upload <value>         ready upload ID owned by the caller; repeat to select
+                           multiple files
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access import list`
+
+```text
+Usage: ciphrix access import list [options]
+
+List your unresolved imports using cursor pagination.
+
+Options:
+  --cursor <value>         continuation cursor returned by the preceding page
+  --limit <value>          page size; server limits apply
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access import get`
+
+```text
+Usage: ciphrix access import get [options] <importId>
+
+Inspect proposal rows, matches, evidence and revisions before merging.
+
+Options:
+  --cursor <value>         continuation cursor returned by the preceding page
+  --limit <value>          page size; server limits apply
+  --filter <value>         proposal-row filter: all, new, unchanged, update or
+                           conflict
+  --search <value>         search visible records
+  --ids-only               return proposal-row IDs instead of full details
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access import merge`
+
+```text
+Usage: ciphrix access import merge [options] <importId>
+
+Merge only reviewed selected rows; preserve corrections and explicit
+confirmations.
+
+Options:
+  --rows-file <value>      JSON array of explicitly selected rows; regular file,
+                           at most 1 MiB
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Rows require proposal_row_id. Optional reviewed corrections: resource_id, resource_name, website, identity, role, person_id, resource_owner_person_id, confirm_person_match, confirm_visual_evidence, expected_revision, access_id. Preserve snake_case. Never infer match/evidence confirmations or merge all rows implicitly. Read the proposal before selecting rows.
+
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access import discard`
+
+```text
+Usage: ciphrix access import discard [options] <importId>
+
+Stop extraction/merge; retain successful merges and independent enrichment.
+
+Options:
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access review`
+
+```text
+Usage: ciphrix access review [options] [command]
+
+Review campaigns, assigned decisions, completion and frozen outcomes
+
+Options:
+  -h, --help                   display help for command
+
+Commands:
+  preview [options]            Preview selected eligible owners and unresolved
+                               entries without creating work.
+  start [options]              Create a review, reviewer tasks and assignment
+                               notifications.
+  list [options]               Read active progress or closed/cancelled history.
+  task [options] <taskId>      Read your assigned reviewer task, current
+                               revisions and decisions.
+  decide [options] <taskId>    Record explicit keep/revoke decisions. Revoke is
+                               a removal request, not provider revocation.
+  complete [options] <taskId>  Complete your assigned task after all decisions;
+                               may close a fully reviewed campaign.
+  result [options] <reviewId>  Read frozen outcomes; pending/unresolved never
+                               imply approval.
+  end [options] <reviewId>     Explicitly close with current outcomes or cancel
+                               without a result; close reviewer tasks.
+  export [options] <reviewId>  Create a temporary signed CSV reference; no
+                               automatic download.
+  help [command]               display help for command
+```
+
+## `ciphrix access review preview`
+
+```text
+Usage: ciphrix access review preview [options]
+
+Preview selected eligible owners and unresolved entries without creating work.
+
+Options:
+  --resource <value>       existing resource ID; repeat for multiple selections
+                           where supported
+  --due-at <value>         ISO due date/time; review creation defaults to 14
+                           days if omitted
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access review start`
+
+```text
+Usage: ciphrix access review start [options]
+
+Create a review, reviewer tasks and assignment notifications.
+
+Options:
+  --name <value>           record name
+  --resource <value>       existing resource ID; repeat for multiple selections
+                           where supported
+  --due-at <value>         ISO due date/time; review creation defaults to 14
+                           days if omitted
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access review list`
+
+```text
+Usage: ciphrix access review list [options]
+
+Read active progress or closed/cancelled history.
+
+Options:
+  --status <value>         review filter: active, closed, cancelled or history
+  --page <value>           page number starting at 1
+  --limit <value>          page size; server limits apply
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access review task`
+
+```text
+Usage: ciphrix access review task [options] <taskId>
+
+Read your assigned reviewer task, current revisions and decisions.
+
+Options:
+  --page <value>           page number starting at 1
+  --limit <value>          page size; server limits apply
+  --search <value>         search visible records
+  --review-state <value>   inventory: needs_review, pending, keep, revoke or
+                           inactive; reviewer task: pending or all
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access review decide`
+
+```text
+Usage: ciphrix access review decide [options] <taskId>
+
+Record explicit keep/revoke decisions. Revoke is a removal request, not provider
+revocation.
+
+Options:
+  --items-file <value>     JSON array of accessId, expectedRevision, decision
+                           and optional comment; at most 1 MiB
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Items: [{accessId, expectedRevision, decision, comment?}]. decision is keep or revoke; comment may be null. Revoke records a removal request, not provider revocation. Complete the assigned task separately after all decisions.
+
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access review complete`
+
+```text
+Usage: ciphrix access review complete [options] <taskId>
+
+Complete your assigned task after all decisions; may close a fully reviewed
+campaign.
+
+Options:
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access review result`
+
+```text
+Usage: ciphrix access review result [options] <reviewId>
+
+Read frozen outcomes; pending/unresolved never imply approval.
+
+Options:
+  --page <value>           page number starting at 1
+  --limit <value>          page size; server limits apply
+  --search <value>         search visible records
+  --resource <value>       existing resource ID; repeat for multiple selections
+                           where supported
+  --outcome <value>        frozen outcome filter: keep, revoke, pending,
+                           unresolved or inactive
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access review end`
+
+```text
+Usage: ciphrix access review end [options] <reviewId>
+
+Explicitly close with current outcomes or cancel without a result; close
+reviewer tasks.
+
+Options:
+  --status <value>         closed freezes outcomes; cancelled creates no result
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix access review export`
+
+```text
+Usage: ciphrix access review export [options] <reviewId>
+
+Create a temporary signed CSV reference; no automatic download.
+
+Options:
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix agent`
+
+```text
+Usage: ciphrix agent [options] [command]
+
+Agent activity, complete proposals and explicit human decisions
+
+Options:
+  -h, --help      display help for command
+
+Commands:
+  run             Grouped agent activity; findings are not completed assessments
+  action          Findings, reviewed proposals and declared
+                  approve/reject/choose options
+  help [command]  display help for command
+```
+
+## `ciphrix agent run`
+
+```text
+Usage: ciphrix agent run [options] [command]
+
+Grouped agent activity; findings are not completed assessments
+
+Options:
+  -h, --help      display help for command
+
+Commands:
+  list [options]  List grouped agent activity; counts are not completed
+                  assessments.
+  help [command]  display help for command
+```
+
+## `ciphrix agent run list`
+
+```text
+Usage: ciphrix agent run list [options]
+
+List grouped agent activity; counts are not completed assessments.
+
+Options:
+  --agent <value>           agent filter; repeat for multiple values
+  --action-type <value>     action-type filter; repeat for multiple values
+  --status <value>          status filter; repeat for multiple values
+  --initiator-type <value>  initiator-type filter; repeat for multiple values
+  --from <value>            ISO lower date/time bound
+  --to <value>              ISO upper date/time bound
+  --search <value>          search visible records
+  --limit <value>           page size; server limits apply
+  --offset <value>          number of grouped results to skip
+  --api-url <url>           override the API base URL
+  --json                    emit one complete result/error envelope
+  --yes                     confirmed writes only: explicitly authorize without
+                            prompting; rejected on reads/immediate writes
+  --idempotency-key <key>   writes only: key for one logical operation; reuse
+                            identical input, at most 256 characters
+  -h, --help                display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix agent action`
+
+```text
+Usage: ciphrix agent action [options] [command]
+
+Findings, reviewed proposals and declared approve/reject/choose options
+
+Options:
+  -h, --help                        display help for command
+
+Commands:
+  list [options]                    Inspect agent findings or current review
+                                    work; preserve truncation and cursors.
+  get [options] <agentActionId>     Read a proposal and its declared options
+                                    before deciding.
+  decide [options] <agentActionId>  Apply an explicit reviewed decision;
+                                    unsupported, delete and truncated approvals
+                                    are refused.
+  help [command]                    display help for command
+```
+
+## `ciphrix agent action list`
+
+```text
+Usage: ciphrix agent action list [options]
+
+Inspect agent findings or current review work; preserve truncation and cursors.
+
+Options:
+  --agent <value>           agent filter; repeat for multiple values
+  --action-type <value>     action-type filter; repeat for multiple values
+  --status <value>          status filter; repeat for multiple values
+  --initiator-type <value>  initiator-type filter; repeat for multiple values
+  --from <value>            ISO lower date/time bound
+  --to <value>              ISO upper date/time bound
+  --search <value>          search visible records
+  --limit <value>           page size; server limits apply
+  --job <value>             existing background job ID
+  --cursor <value>          continuation cursor returned by the preceding page
+  --review-only             read the current human-review queue
+  --api-url <url>           override the API base URL
+  --json                    emit one complete result/error envelope
+  --yes                     confirmed writes only: explicitly authorize without
+                            prompting; rejected on reads/immediate writes
+  --idempotency-key <key>   writes only: key for one logical operation; reuse
+                            identical input, at most 256 characters
+  -h, --help                display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix agent action get`
+
+```text
+Usage: ciphrix agent action get [options] <agentActionId>
+
+Read a proposal and its declared options before deciding.
+
+Options:
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix agent action decide`
+
+```text
+Usage: ciphrix agent action decide [options] <agentActionId>
+
+Apply an explicit reviewed decision; unsupported, delete and truncated approvals
+are refused.
+
+Options:
+  --decision <value>             explicit human decision: approve, reject or
+                                 choose
+  --expected-updated-at <value>  exact updatedAt timestamp from the latest read
+  --option <value>               exact declared option for choose only; no
+                                 delete options
+  --reason <value>               human explanation for the decision
+  --api-url <url>                override the API base URL
+  --json                         emit one complete result/error envelope
+  --yes                          confirmed writes only: explicitly authorize
+                                 without prompting; rejected on reads/immediate
+                                 writes
+  --idempotency-key <key>        writes only: key for one logical operation;
+                                 reuse identical input, at most 256 characters
+  -h, --help                     display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix task`
+
+```text
+Usage: ciphrix task [options] [command]
+
+Your assigned stored work; discovery never completes tasks
+
+Options:
+  -h, --help              display help for command
+
+Commands:
+  list [options]          Read your assigned stored tasks; does not refresh
+                          assignments or complete work.
+  get [options] <taskId>  Read your task and its supported next capability;
+                          unsupported actions remain in the app.
+  help [command]          display help for command
+```
+
+## `ciphrix task list`
+
+```text
+Usage: ciphrix task list [options]
+
+Read your assigned stored tasks; does not refresh assignments or complete work.
+
+Options:
+  --state <value>          active or history
+  --task-type <value>      active-task filter: all, todo, assignment or action;
+                           omit with history
+  --page <value>           page number starting at 1
+  --limit <value>          page size; server limits apply
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix task get`
+
+```text
+Usage: ciphrix task get [options] <taskId>
+
+Read your task and its supported next capability; unsupported actions remain in
+the app.
+
+Options:
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix file`
+
+```text
+Usage: ciphrix file [options] [command]
+
+Owned local-file staging and explicit processing; no automatic downloads
+
+Options:
+  -h, --help              display help for command
+
+Commands:
+  stage [options] <path>  Stage a local regular file as your current identity;
+                          at most 25 MiB, no automatic processing.
+  process [options]       Process owned documents-purpose uploads. May update
+                          context or create vendors; starts background work.
+  help [command]          display help for command
+```
+
+## `ciphrix file stage`
+
+```text
+Usage: ciphrix file stage [options] <path>
+
+Stage a local regular file as your current identity; at most 25 MiB, no
+automatic processing.
+
+Options:
+  --purpose <value>        staging purpose advertised by the server; does not
+                           process the file
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix file process`
+
+```text
+Usage: ciphrix file process [options]
+
+Process owned documents-purpose uploads. May update context or create vendors;
+starts background work.
+
+Options:
+  --upload <value>         ready upload ID owned by the caller; repeat to select
+                           multiple files
+  --api-url <url>          override the API base URL
+  --json                   emit one complete result/error envelope
+  --yes                    confirmed writes only: explicitly authorize without
+                           prompting; rejected on reads/immediate writes
+  --idempotency-key <key>  writes only: key for one logical operation; reuse
+                           identical input, at most 256 characters
+  -h, --help               display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
+
+## `ciphrix onboarding`
+
+```text
+Usage: ciphrix onboarding [options]
+
+Learn organizational context, inspect optional setup and explicitly complete the
+journey. Operating Context does not block completion.
+
+Options:
+  --status                     read current journey and separate context
+                               readiness
+  --help-onboarding            read authenticated server help, all options and
+                               current status
+  --get-context <value>        read business/operating schema and answers
+  --set-context <value>        save one agreed business/operating answer without
+                               completing the journey
+  --run-vendor-agent           start vendor discovery; may create vendors;
+                               requires Business Context 100%
+  --run-risk-agent             start initial risk generation; requires Business
+                               Context 100%
+  --init-framework <value>     initialize a selected framework; may consume
+                               quota and notify administrators
+  --complete                   explicitly complete with Business Context 100%;
+                               operating/setup remain optional
+  --question <id>              questionId from the selected schema
+  --value <json>               strict JSON answer, including quoted JSON strings
+  --additional-context <text>  answer explanation; explanation-only answers are
+                               supported
+  --api-url <url>              override the API base URL
+  --json                       emit one complete result/error envelope
+  --yes                        confirmed writes only: explicitly authorize
+                               without prompting; rejected on reads/immediate
+                               writes
+  --idempotency-key <key>      writes only: key for one logical operation; reuse
+                               identical input, at most 256 characters
+  -h, --help                   display help for command
+
+Writes use one idempotency key per operation. Reuse that key/input for retries; never bypass an unknown outcome with a new key. Confirmed calls also require valid confirmation: a fresh invocation re-preflights and may be blocked by changed state or expiry. Inspect current state/jobs when uncertain. Replayed status packs and signed URLs are snapshots, not refreshed reads.
+```
+
+**Effect:** Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.
 
 ## Behavioral defaults
 

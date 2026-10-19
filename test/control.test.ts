@@ -1,9 +1,11 @@
+import { withLegacyManifest } from './legacyManifest.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   controlAvailableItemsCommand,
   controlLinkCommand,
   controlListCommand,
+  controlGetCommand,
   controlUpdateCommand,
 } from '../src/commands/control.js';
 import { apiUrl, jsonResponse, requestBody, setup } from './helpers.js';
@@ -19,6 +21,51 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+it('passes framework filters through without changing legacy JSON output', async () => {
+  const fetchMock = vi.fn(() =>
+    Promise.resolve(jsonResponse({ status: 'ok', data: { controls: [] } })),
+  );
+  vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
+  const { io, store, out } = setup();
+  await controlListCommand({
+    io,
+    credentialStore: store,
+    apiUrl,
+    framework: ['synthetic-one', 'synthetic-two'],
+    json: true,
+  });
+  expect(requestBody(fetchMock.mock.calls[0]).input).toEqual({
+    framework: ['synthetic-one', 'synthetic-two'],
+  });
+  expect(JSON.parse(out.text)).toEqual({ controls: [] });
+});
+
+it('labels returned catalogue relationships as mappings rather than compliance claims', async () => {
+  vi.stubGlobal(
+    'fetch',
+    withLegacyManifest(
+      vi.fn(() =>
+        Promise.resolve(
+          jsonResponse({
+            status: 'ok',
+            data: {
+              control: {
+                name: 'Synthetic control',
+                complianceMap: [{ code: 'Synthetic framework' }],
+                items: [],
+              },
+            },
+          }),
+        ),
+      ),
+    ),
+  );
+  const { io, store, out } = setup();
+  await controlGetCommand({ io, credentialStore: store, apiUrl, name: 'Synthetic control' });
+  expect(out.text).toContain('not a compliance assessment');
+  expect(out.text).toContain('Synthetic framework');
+});
+
 describe('control update confirmation', () => {
   it('sends the write input and idempotency key, then applies with the token', async () => {
     const fetchMock = vi
@@ -27,7 +74,7 @@ describe('control update confirmation', () => {
       .mockResolvedValueOnce(
         jsonResponse({ status: 'ok', data: { id: 'ctrl-1', applied: ['applicability'] } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await controlUpdateCommand({
@@ -71,7 +118,7 @@ describe('control link confirmation', () => {
           data: { id: 'ctrl-1', action: 'link', itemType: 'test', itemId: 't-1' },
         }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await controlLinkCommand({
@@ -97,7 +144,7 @@ describe('control list filters', () => {
       .mockResolvedValue(
         jsonResponse({ status: 'ok', data: { controls: [], total: 0, page: 1, limit: 25 } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await controlListCommand({ io, credentialStore: store, apiUrl, ownerId: 'u-1, u-2' });
@@ -125,7 +172,7 @@ describe('control available pagination', () => {
         },
       }),
     );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, out, store } = setup();
 
     await controlAvailableItemsCommand({

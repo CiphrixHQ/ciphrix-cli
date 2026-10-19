@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { getTool, ManifestError, type ToolDescriptor } from './manifest.js';
 import { constants } from 'node:fs';
 import { lstat, open } from 'node:fs/promises';
 import { basename } from 'node:path';
@@ -38,13 +39,15 @@ export interface UploadLimits {
   maxResponseBytes?: number;
 }
 
-const readUploadFile = async (filePath: string, maxBytes: number): Promise<Buffer> => {
+export class FileInputError extends Error {}
+
+export const readUploadFile = async (filePath: string, maxBytes: number): Promise<Buffer> => {
   const initialStat = await lstat(filePath);
   if (initialStat.isSymbolicLink() || !initialStat.isFile()) {
-    throw new Error('Upload path must be a regular file, not a symlink or special file.');
+    throw new FileInputError('Upload path must be a regular file, not a symlink or special file.');
   }
   if (initialStat.size > maxBytes) {
-    throw new Error(`Upload exceeds the ${maxBytes}-byte file size limit.`);
+    throw new FileInputError(`Upload exceeds the ${maxBytes}-byte file size limit.`);
   }
 
   const noFollow = constants.O_NOFOLLOW ?? 0;
@@ -56,22 +59,24 @@ const readUploadFile = async (filePath: string, maxBytes: number): Promise<Buffe
       openedStat.dev !== initialStat.dev ||
       openedStat.ino !== initialStat.ino
     ) {
-      throw new Error('Upload path changed while it was being opened. Please retry.');
+      throw new FileInputError('Upload path changed while it was being opened. Please retry.');
     }
     if (openedStat.size > maxBytes) {
-      throw new Error(`Upload exceeds the ${maxBytes}-byte file size limit.`);
+      throw new FileInputError(`Upload exceeds the ${maxBytes}-byte file size limit.`);
     }
 
     const chunks: Buffer[] = [];
     let total = 0;
     while (true) {
       const remaining = maxBytes + 1 - total;
-      if (remaining <= 0) throw new Error(`Upload exceeds the ${maxBytes}-byte file size limit.`);
+      if (remaining <= 0)
+        throw new FileInputError(`Upload exceeds the ${maxBytes}-byte file size limit.`);
       const chunk = Buffer.allocUnsafe(Math.min(64 * 1024, remaining));
       const { bytesRead } = await file.read(chunk, 0, chunk.length, null);
       if (bytesRead === 0) break;
       total += bytesRead;
-      if (total > maxBytes) throw new Error(`Upload exceeds the ${maxBytes}-byte file size limit.`);
+      if (total > maxBytes)
+        throw new FileInputError(`Upload exceeds the ${maxBytes}-byte file size limit.`);
       chunks.push(chunk.subarray(0, bytesRead));
     }
     return Buffer.concat(chunks, total);
@@ -91,12 +96,24 @@ const contentTypeFor = (filename: string): string => {
  * to a target (a test run, a risk, a vendor). The file is sent as multipart to the tool surface with
  * the bearer credential, so no cookie or CSRF token is involved.
  */
-export const uploadLocalFile = async (
+export const stageLocalFile = async (
   ctx: ToolContext,
   filePath: string,
   purpose: string,
   limits: UploadLimits = {},
-): Promise<{ id: string; filename: string; size: number }> => {
+  descriptor?: ToolDescriptor,
+  idempotencyKey: string = randomUUID(),
+): Promise<{ id: string; filename: string; size: number; envelope: Record<string, unknown> }> => {
+  const tool = descriptor ?? (await getTool(ctx, 'upload_file'));
+  if (tool.effect !== 'write' || tool.confirmation !== 'none') {
+    throw new ManifestError('The server does not support immediate file staging.');
+  }
+  const properties = asRecord(tool.inputSchema.properties);
+  const purposes = asRecord(properties.purpose).enum;
+  if (!Array.isArray(purposes) || !purposes.includes(purpose))
+    throw new Error('Unsupported upload purpose.');
+  if (!idempotencyKey.trim() || idempotencyKey.length > 256)
+    throw new Error('The idempotency key must contain 1 to 256 characters.');
   const filename = basename(filePath);
   const contents = await readUploadFile(
     filePath,
@@ -112,12 +129,15 @@ export const uploadLocalFile = async (
   );
 
   return withRequestTimeout(limits.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS, async (signal) => {
-    const response = await fetchWithoutRedirects(`${ctx.baseUrl}/tools/v1/upload_file`, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${ctx.token}`, 'idempotency-key': randomUUID() },
-      body: form,
-      signal,
-    });
+    const response = await fetchWithoutRedirects(
+      `${ctx.baseUrl}/tools/v1/${encodeURIComponent(tool.name)}`,
+      {
+        method: 'POST',
+        headers: { authorization: `Bearer ${ctx.token}`, 'idempotency-key': idempotencyKey },
+        body: form,
+        signal,
+      },
+    );
 
     const text = await readLimitedText(
       response,
@@ -138,7 +158,15 @@ export const uploadLocalFile = async (
         typeof asRecord(envelope.error).message === 'string'
           ? (asRecord(envelope.error).message as string)
           : `Upload failed with status ${response.status}`;
-      throw new ApiError(message, response.status);
+      throw new ApiError(
+        message,
+        response.status,
+        typeof asRecord(envelope.error).code === 'string'
+          ? String(asRecord(envelope.error).code)
+          : undefined,
+        asRecord(envelope.error).details,
+        envelope,
+      );
     }
 
     const payload = asRecord(envelope.data);
@@ -146,8 +174,19 @@ export const uploadLocalFile = async (
     if (!id) throw new ApiError('Upload did not return an id', 502);
     return {
       id,
+      envelope,
       filename: typeof payload.filename === 'string' ? payload.filename : filename,
       size: typeof payload.size === 'number' ? payload.size : contents.length,
     };
   });
+};
+
+export const uploadLocalFile = async (
+  ctx: ToolContext,
+  filePath: string,
+  purpose: string,
+  limits: UploadLimits = {},
+): Promise<{ id: string; filename: string; size: number }> => {
+  const { id, filename, size } = await stageLocalFile(ctx, filePath, purpose, limits);
+  return { id, filename, size };
 };

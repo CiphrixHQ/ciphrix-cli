@@ -1,3 +1,4 @@
+import { withLegacyManifest } from './legacyManifest.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { assetCreateCommand, assetListCommand, assetUpdateCommand } from '../src/commands/asset.js';
@@ -14,7 +15,7 @@ describe('asset write', () => {
       .mockResolvedValue(
         jsonResponse({ status: 'ok', data: { id: 'a-1', code: 'AST-1', name: 'Payroll DB' } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await assetCreateCommand({
@@ -50,7 +51,7 @@ describe('asset update confirmation', () => {
       .mockResolvedValueOnce(
         jsonResponse({ status: 'ok', data: { assetId: 'a-1', applied: ['status'], failed: [] } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await assetUpdateCommand({
@@ -79,7 +80,7 @@ describe('asset list filters', () => {
       .mockResolvedValue(
         jsonResponse({ status: 'ok', data: { assets: [], total: 0, page: 2, limit: 10 } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await assetListCommand({

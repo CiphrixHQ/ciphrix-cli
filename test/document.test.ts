@@ -1,3 +1,4 @@
+import { withLegacyManifest } from './legacyManifest.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { policyCreateCommand, policyDeleteCommand } from '../src/commands/policyActions.js';
@@ -14,7 +15,7 @@ describe('document write', () => {
       .mockResolvedValue(
         jsonResponse({ status: 'ok', data: { name: 'Backup Policy', created: true } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await policyCreateCommand({ io, store, apiUrl, name: 'Backup Policy' });
@@ -47,7 +48,7 @@ describe('document delete confirmation', () => {
           data: { policyId: 'p-1', name: 'Backup Policy', status: 'deleted' },
         }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await policyDeleteCommand({ io, store, apiUrl, policy: 'Backup Policy', yes: true });

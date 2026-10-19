@@ -5,6 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Onboarding status, questionnaire help and answer setting, optional initial agents/framework setup,
+  and explicit journey completion.
+- Access inventory, reviewed imports, reviewer decisions, campaign completion/cancellation and CSV
+  export references; agent findings/decisions and caller-assigned task discovery.
+- Standalone file staging and processing, linked evidence references, and advisory test/control
+  assessments that remain distinct from formal human results.
+- Manifest-owned command bindings, complete JSON envelopes for new commands, structured domain errors,
+  explicit write keys and help covering conditional inputs, partial outcomes and retry limitations.
+
+### Changed
+
+- Write effects and confirmation requirements are discovered from the server manifest rather than a
+  client-maintained tool-name list. Unsupported capabilities fail without an alternate endpoint fallback.
+- Test-run notes can be edited or cleared without changing the recorded result. Control lists accept
+  repeatable framework filters. Existing successful command JSON formats remain unchanged.
+
 ## [0.1.1] - 2026-10-05
 
 ### Added

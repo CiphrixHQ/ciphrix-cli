@@ -183,6 +183,12 @@ const renderRuns = (io: CliIO, runs: unknown[], assurance: Record<string, unknow
       ];
     }),
   );
+  for (const run of runs) {
+    const record = asRecord(run);
+    if (typeof record.note === 'string' && record.note.trim() !== '') {
+      writeLine(io.stdout, `Note (${text(record.id)}): ${record.note}`);
+    }
+  }
 };
 
 const assuranceLabel = (assessment: unknown): string => assessmentLabel(assessment);
@@ -267,11 +273,17 @@ export const testRunResultCommand = async ({
   credentialStore,
   status,
   note,
-}: TestReadOptions & { status: string; note?: string | undefined }): Promise<void> => {
+}: TestReadOptions & {
+  status?: string | undefined;
+  note?: string | null | undefined;
+}): Promise<void> => {
+  if (status === undefined && note === undefined)
+    throw new Error('Provide --status, --note or --clear-note.');
   const ctx = await resolveToolContext(apiUrl, credentialStore);
-  const input: Record<string, unknown> = { name, status };
+  const input: Record<string, unknown> = { name };
+  if (status !== undefined) input.status = status;
   if (runId) input.runId = runId;
-  if (note) input.note = note;
+  if (note !== undefined) input.note = note;
   const result = await applyTool({
     ctx,
     io,
@@ -281,7 +293,15 @@ export const testRunResultCommand = async ({
   });
   if (!result) return;
   if (json) writeLine(io.stdout, JSON.stringify(result.data, null, 2));
-  else writeLine(io.stdout, `${io.theme.green('✓')} run result: ${status}`);
+  else
+    writeLine(
+      io.stdout,
+      status === undefined
+        ? 'Run note updated; result unchanged.'
+        : `${io.theme.green('✓')} run result: ${status}`,
+    );
+  const jobId = asText(asRecord(result.meta).aiTaskId);
+  if (!json && jobId) writeNextHint(io, `ciphrix job status ${jobId}`);
 };
 
 export const testRunDeleteCommand = async ({

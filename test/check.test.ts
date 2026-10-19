@@ -1,3 +1,4 @@
+import { withLegacyManifest } from './legacyManifest.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { checkSetEnabledCommand } from '../src/commands/check.js';
@@ -21,7 +22,7 @@ describe('check enable/disable confirmation', () => {
       .mockResolvedValueOnce(
         jsonResponse({ status: 'ok', data: { checkId: 'chk-1', enabled: false } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await checkSetEnabledCommand({

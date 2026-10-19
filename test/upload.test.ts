@@ -1,16 +1,18 @@
+import { withLegacyManifest } from './legacyManifest.js';
 import { mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ToolContext } from '../src/toolSurface.js';
+import { createApiClient } from '../src/api.js';
 import { DEFAULT_MAX_UPLOAD_BYTES, uploadLocalFile } from '../src/upload.js';
 
-const ctx = {
+const ctx: ToolContext = {
   baseUrl: 'https://api.example.com/api',
   token: 'token',
-  client: {},
-} as unknown as ToolContext;
+  client: createApiClient('https://api.example.com/api'),
+};
 
 const withTempFile = async (name: string, contents: string) => {
   const dir = await mkdtemp(join(tmpdir(), 'ciphrix-upload-'));
@@ -37,7 +39,7 @@ describe('uploadLocalFile', () => {
         ),
       ),
     );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
 
     try {
       const result = await uploadLocalFile(ctx, path, 'test');
@@ -58,14 +60,16 @@ describe('uploadLocalFile', () => {
     const { path, cleanup } = await withTempFile('evidence.txt', 'hello');
     vi.stubGlobal(
       'fetch',
-      vi.fn(() =>
-        Promise.resolve(
-          new Response(
-            JSON.stringify({ status: 'error', error: { message: 'Invalid upload purpose' } }),
-            {
-              status: 400,
-              headers: { 'content-type': 'application/json' },
-            },
+      withLegacyManifest(
+        vi.fn(() =>
+          Promise.resolve(
+            new Response(
+              JSON.stringify({ status: 'error', error: { message: 'Invalid upload purpose' } }),
+              {
+                status: 400,
+                headers: { 'content-type': 'application/json' },
+              },
+            ),
           ),
         ),
       ),
@@ -85,7 +89,7 @@ describe('uploadLocalFile', () => {
         new Response(null, { status: 307, headers: { location: 'https://other.example/upload' } }),
       ),
     );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
 
     try {
       await expect(uploadLocalFile(ctx, path, 'test')).rejects.toThrow(
@@ -102,7 +106,7 @@ describe('uploadLocalFile', () => {
   it('rejects an oversized file before making a request', async () => {
     const { path, cleanup } = await withTempFile('large.txt', '123456');
     const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
 
     try {
       await expect(uploadLocalFile(ctx, path, 'test', { maxUploadBytes: 5 })).rejects.toThrow(
@@ -118,11 +122,13 @@ describe('uploadLocalFile', () => {
     const { path, cleanup } = await withTempFile('small.txt', '12345');
     vi.stubGlobal(
       'fetch',
-      vi.fn(() =>
-        Promise.resolve(
-          new Response(JSON.stringify({ status: 'ok', data: { uploadId: 'upload-1' } }), {
-            status: 200,
-          }),
+      withLegacyManifest(
+        vi.fn(() =>
+          Promise.resolve(
+            new Response(JSON.stringify({ status: 'ok', data: { uploadId: 'upload-1' } }), {
+              status: 200,
+            }),
+          ),
         ),
       ),
     );
@@ -141,7 +147,7 @@ describe('uploadLocalFile', () => {
     const linkPath = `${path}.link`;
     await symlink(path, linkPath);
     const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
 
     try {
       await expect(
@@ -165,7 +171,7 @@ describe('uploadLocalFile', () => {
           );
         }),
     );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
 
     try {
       await expect(uploadLocalFile(ctx, path, 'test', { timeoutMs: 5 })).rejects.toThrow(

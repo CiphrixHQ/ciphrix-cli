@@ -1,3 +1,4 @@
+import { withLegacyManifest } from './legacyManifest.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { vendorCreateCommand, vendorDeleteCommand } from '../src/commands/vendor.js';
@@ -14,7 +15,7 @@ describe('vendor write', () => {
       .mockResolvedValue(
         jsonResponse({ status: 'ok', data: { id: 'v-1', name: 'Acme', status: 'created' } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await vendorCreateCommand({ io, credentialStore: store, apiUrl, name: 'Acme' });
@@ -30,7 +31,7 @@ describe('vendor write', () => {
       .mockResolvedValue(
         jsonResponse({ status: 'ok', data: { id: 'v-1', name: 'Acme', status: 'created' } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await vendorCreateCommand({
@@ -72,7 +73,7 @@ describe('vendor delete confirmation', () => {
       .mockResolvedValueOnce(
         jsonResponse({ status: 'ok', data: { id: 'v-1', status: 'deleted' } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await vendorDeleteCommand({ io, credentialStore: store, apiUrl, name: 'Acme', yes: true });

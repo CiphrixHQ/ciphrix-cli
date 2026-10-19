@@ -22,7 +22,7 @@ const effectNotes = {
   'test run create':
     'Creates a pending test run; the CLI prompts if the API requests confirmation.',
   'test run result':
-    'Records a formal test-run result; the CLI prompts if the API requests confirmation.',
+    'Records a human-decided result or changes/clears its note independently; a note-only update never changes the result.',
   'test run delete': 'Deletes the selected test run; the CLI asks for confirmation when required.',
   'framework update': 'Changes a clause assessment; the CLI asks for confirmation when required.',
   'framework link':
@@ -62,6 +62,19 @@ const effectNotes = {
 
 const program = createProgram();
 
+const commandHelp = (command) => {
+  let text = '';
+  const previous = { ...command.configureOutput() };
+  command.configureOutput({
+    writeOut: (chunk) => {
+      text += chunk;
+    },
+  });
+  command.outputHelp();
+  command.configureOutput(previous);
+  return text.trimEnd();
+};
+
 const lines = [
   '# Ciphrix CLI command reference',
   '',
@@ -82,20 +95,16 @@ const lines = [
 const walk = (command, parents = []) => {
   for (const child of command.commands) {
     const path = [...parents, child.name()].join(' ');
-    lines.push(
-      `## \`ciphrix ${path}\``,
-      '',
-      '```text',
-      child.helpInformation().trimEnd(),
-      '```',
-      '',
-    );
+    lines.push(`## \`ciphrix ${path}\``, '', '```text', commandHelp(child), '```', '');
     const hasYesOption = child.options.some((option) => option.attributeName() === 'yes');
+    const hasWriteKey = child.options.some((option) => option.attributeName() === 'idempotencyKey');
     const note =
       effectNotes[path] ||
-      (hasYesOption
-        ? 'This operation may request confirmation based on the server response; --yes skips the interactive prompt when one is requested.'
-        : undefined);
+      (hasWriteKey
+        ? 'Write controls apply only when advertised by the server: reads reject them, immediate writes do not accept --yes, and confirmed writes require valid explicit consent. Inspect uncertain outcomes rather than bypassing them with a new key.'
+        : hasYesOption
+          ? 'This operation may request confirmation based on the server response; --yes skips the interactive prompt when one is requested.'
+          : undefined);
     if (note) lines.push(`**Effect:** ${note}`, '');
 
     const defaults = child.options
@@ -190,7 +199,9 @@ lines.push(
 
 const content = await format(`${lines.join('\n')}\n`, { parser: 'markdown' });
 
-if (checkOnly) {
+if (process.argv.includes('--stdout')) {
+  process.stdout.write(content);
+} else if (checkOnly) {
   let existing;
   try {
     existing = await readFile(outputPath, 'utf8');

@@ -1,6 +1,6 @@
 ---
 name: ciphrix
-description: Operate a Ciphrix compliance programme with the `ciphrix` CLI. Use when an agent needs to understand or change a tenant's business context, documents, frameworks, controls, tests and evidence, risks, vendors, assets, monitoring checks, or background jobs.
+description: Operate a Ciphrix compliance programme with the `ciphrix` CLI. Use for onboarding and organizational context, documents, frameworks, controls, tests and evidence, access reviews and imports, agent findings, assigned tasks, risks, vendors, assets, monitoring checks, or background jobs.
 ---
 
 # Ciphrix
@@ -139,6 +139,31 @@ are what a check raised. `check disable` silences a check for the tenant — rec
 **Check on background work.** Anything that returns a job id is polled, not awaited.
 
 ## Guardrails
+
+**Context and onboarding.** Read the server status and question schema, then save only facts agreed
+with the user. Business and Operating Context are separate. Let the server decide readiness; initial
+setup is optional and journey completion is explicit. A context save never authorizes starting agents,
+initializing a framework or completing onboarding. Replayed packs are snapshots: read status again for
+current readiness.
+
+**Access reviews and proposals.** Inventory is not a review decision. Inspect proposal rows, matches,
+source evidence and current revisions before selecting a merge. Never manufacture person-match or
+visual-evidence confirmation. Keep/revoke decisions, reviewer-task completion and campaign ending are
+distinct human intents. A revoke decision is a removal request, not provider-side revocation. Agent
+findings/options and AI assessments are advisory; inspect the complete current proposal and exact
+declared option before any explicit decision. Assigned-task discovery grants no completion authority.
+
+**Writes and uncertainty.** Discover capabilities through the server, use the exact reviewed inputs,
+and treat confirmation as explicit delegated consent, not an obstacle to automate around. Retain one
+idempotency key per logical operation; never retry unknown outcomes with a new key. The CLI performs no
+automatic write retries and does not promise confirmed recovery across invocations or expired tokens.
+Inspect state/jobs when uncertain. Batch results can partially apply; preserve and report failures.
+Advisory assessments never authorize a formal passing result.
+
+**Files.** Stage and process only the files the user selected. General processing may update context
+or create vendor records; staging alone does not authorize that processing. Imports are proposed work,
+not merged inventory. Temporary evidence/export references expire; do not forward credentials to them,
+claim bytes were downloaded when only a reference was returned, or treat a replayed URL as renewed.
 
 - Work only in the tenant and API environment the authenticated user selected. Never discover or switch
   tenants, endpoints or credential stores by guessing.

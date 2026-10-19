@@ -1,8 +1,11 @@
+import { withLegacyManifest } from './legacyManifest.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   testAvailableItemsCommand,
   testRunCreateCommand,
+  testRunResultCommand,
+  testRunsCommand,
   testUpdateCommand,
 } from '../src/commands/test.js';
 import { apiUrl, jsonResponse, requestBody, setup } from './helpers.js';
@@ -12,13 +15,61 @@ afterEach(() => {
 });
 
 describe('test run write', () => {
+  it('renders the recorded run note without interpreting it as a result', async () => {
+    vi.stubGlobal(
+      'fetch',
+      withLegacyManifest(
+        vi.fn(() =>
+          Promise.resolve(
+            jsonResponse({
+              status: 'ok',
+              data: {
+                runs: [
+                  {
+                    id: 'synthetic-run',
+                    status: 'pending',
+                    note: 'Synthetic human note',
+                    itemCounts: {},
+                  },
+                ],
+              },
+            }),
+          ),
+        ),
+      ),
+    );
+    const { io, store, out } = setup();
+    await testRunsCommand({ io, credentialStore: store, apiUrl, name: 'Synthetic test' });
+    expect(out.text).toContain('Synthetic human note');
+    expect(out.text).toContain('pending');
+  });
+  it.each(['', null, 'Human note'])(
+    'preserves a note-only change without inventing a result: %s',
+    async (note) => {
+      const fetchMock = vi.fn(() =>
+        Promise.resolve(jsonResponse({ status: 'ok', data: { runId: 'synthetic-run' } })),
+      );
+      vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
+      const { io, store, out } = setup();
+      await testRunResultCommand({
+        io,
+        credentialStore: store,
+        apiUrl,
+        name: 'Synthetic test',
+        note,
+        json: true,
+      });
+      expect(requestBody(fetchMock.mock.calls[0]).input).toEqual({ name: 'Synthetic test', note });
+      expect(JSON.parse(out.text)).toEqual({ runId: 'synthetic-run' });
+    },
+  );
   it('sends the idempotency key when creating a run', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(
         jsonResponse({ status: 'ok', data: { testId: 't-1', runId: 'r-1', status: 'created' } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await testRunCreateCommand({ io, credentialStore: store, apiUrl, name: 'MFA enforced' });
@@ -45,7 +96,7 @@ describe('test update confirmation', () => {
       .mockResolvedValueOnce(
         jsonResponse({ status: 'ok', data: { id: 't-1', applied: ['applicability'] } }),
       );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, store } = setup();
 
     await testUpdateCommand({
@@ -86,7 +137,7 @@ describe('test available pagination', () => {
         },
       }),
     );
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withLegacyManifest(fetchMock));
     const { io, out, store } = setup();
 
     await testAvailableItemsCommand({
