@@ -103,6 +103,12 @@ Run `npx skills update` to update installed skills when a newer version is avail
 aligned with your installed CLI version; its generated command reference and local help describe the
 available grammar. Server capability discovery remains authoritative for which operations you can use.
 
+For document workflows, assignment and request sending are separate from formal review and approval
+decisions. An agent may coordinate an authorized recall/configure/resend request, but must ask before
+making a formal decision. A sent request must be recalled before changing its recipient, even when
+selecting the same person. Recall clears that assignment. Active employees may be assigned and finish
+their decisions in the app; tool access remains restricted to admins and InfoSec leads.
+
 ### Ask in natural language, operate through the CLI
 
 An agent can translate a request into a Ciphrix command, inspect the structured result, and present the
@@ -146,6 +152,7 @@ one command. Installed help is authoritative. The complete generated reference i
 | `ciphrix login` · `logout`                         | Authorize this device or revoke its session.                                   |
 | `ciphrix context get` · `status` · `set` · `reset` | Read and maintain Business and Operating Context.                              |
 | `ciphrix document …`                               | Browse, read, create, edit, version, submit, approve, and delete documents.    |
+| `ciphrix user list`                                | Discover active users by name/email or paginated listing for assignment.       |
 | `ciphrix test …`                                   | Inspect tests, links, runs and evidence; attach items and record results.      |
 | `ciphrix framework …`                              | Browse applied frameworks and work with clauses and mappings.                  |
 | `ciphrix control …`                                | Inspect controls, ownership, applicability, design requirements, and mappings. |

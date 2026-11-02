@@ -59,6 +59,19 @@ const inputFor = async (
     input[field.field] = parsed;
   }
   if (spec.path === 'access entry bulk-update') input.operation = 'update';
+  if (spec.inputAdapter === 'documentWorkflow') {
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const document = typeof input.document === 'string' ? input.document : '';
+    if (!document.trim()) throw new InputError('Provide a document name, code or ID.');
+    delete input.document;
+    input[uuid.test(document) ? 'policyId' : 'name'] = document;
+    if (input.user !== undefined) {
+      const user = typeof input.user === 'string' ? input.user : '';
+      if (uuid.test(user)) input.user = { id: user };
+      else if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user)) input.user = { email: user };
+      else throw new InputError('--user requires an exact email or User ID.');
+    }
+  }
   return input;
 };
 
@@ -185,6 +198,13 @@ const run = async (
 };
 
 const groupDescriptions: Record<string, string> = {
+  user: 'Active tenant-user discovery; no account administration',
+  'document workflow': 'Configure workflow or explicitly return to draft',
+  'document reviewer': 'Configure the review recipient; recall sent requests first',
+  'document approver': 'Configure the approval recipient; recall sent requests first',
+  'document review': 'Explicit review decisions and request recall; send with document submit',
+  'document approval':
+    'Approval requests, explicit decisions and recall; ordinary decision with document approve',
   access: 'Access inventory, reviewed imports and assigned reviewer workflows',
   'access resource': 'Resources, owners and asset relationships',
   'access entry': 'Revisioned access inventory; inventory edits are not review decisions',
