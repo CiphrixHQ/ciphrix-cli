@@ -85,11 +85,18 @@ All items are required before changing repository visibility or publishing a rel
    package file, scanner result, or hosted copy cannot be inspected or controlled, stop and resolve that
    gap before making the repository public or publishing.
 
+## Required guides
+
+- **Document workflows:** read [skills/ciphrix/references/document-workflows.md](skills/ciphrix/references/document-workflows.md) before changing workflow commands, recipient selectors, recovery guidance or document examples. Keep bindings manifest-owned and existing submit/approve grammar and successful JSON compatible.
+- **Agent guidance:** read [skills/ciphrix/SKILL.md](skills/ciphrix/SKILL.md) before changing user-facing workflow semantics; it owns the public decision/authority guidance. Generate exact syntax through `npm run commands:generate`, then verify `npm run commands:check`.
+- **Releases:** read [docs/releasing.md](docs/releasing.md) before changing package versions, changelog release headings or publication workflows. Version-changing merges to `main` invoke the protected npm release; do not push a release tag from a PR branch.
+
 ## Architecture rules
 
 - No business logic. No direct domain persistence. Delegate to the HTTP tool surface.
 - Never import or copy API/backend code or a private types package; the manifest is the only contract.
 - Do not hardcode tool names, schemas or endpoints beyond the versioned tool path.
+- New workflow commands use the existing capability definitions and manifest bindings. Keep state inspection, transition rules, recipient eligibility and recovery decisions on the server; a command must report unsupported capabilities without guessing an alternate endpoint.
 - Credentials live in the OS keychain by default; never silently fall back to plaintext storage or print
   or log tokens. The `CIPHRIX_CREDENTIAL_STORE=file` option is an explicit local/headless testing opt-in
   and must keep the containing directory at `0700` and the credential file at `0600` where supported.

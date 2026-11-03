@@ -60,8 +60,9 @@ ciphrix test run result "MFA enforced" \
   --note "Rolled out organisation-wide"
 ```
 
-Add `--json` to any command for stable machine-readable output. Commands that perform consequential
-changes show the proposed action and ask for confirmation; automation can opt in with `--yes`.
+Add `--json` for machine-readable output. Confirmed changes show a proposal and ask for consent;
+automation must explicitly opt in with `--yes`. New immediate decision/send commands apply directly
+and reject `--yes`; check command help rather than adding the flag to every write.
 
 ## One interface for compliance work
 
@@ -74,6 +75,31 @@ changes show the proposed action and ask for confirmation; automation can opt in
 
 Established record commands accept names and stable Ciphrix codes where advertised. Access inventory,
 review tasks and proposals require the exact IDs returned by their read commands; never guess identifiers.
+
+### Document review and approval
+
+Configure Simple or Advanced workflows, assign active users, and explicitly send, recall or decide
+review/approval requests. Admins and InfoSec leads operate these commands; employees can receive
+assignments and complete decisions in the app.
+
+```bash
+# Read state before configuring an existing draft
+ciphrix document get "Access Control Policy" --json
+ciphrix document workflow set "Access Control Policy" --type advanced
+ciphrix user list --search "reviewer@example.com" --json
+ciphrix document reviewer set "Access Control Policy" --user "reviewer@example.com"
+ciphrix document approver set "Access Control Policy" --user "approver@example.com"
+
+# Send only when authorized; review completion is a separate human decision
+ciphrix document submit "Access Control Policy"
+```
+
+After the reviewer completes review in the app (or an authorized caller explicitly records that
+decision), request approval separately with `document approval send`. Ordinary approval remains
+`document approve`; self-approval is a distinct explicit decision, not a review bypass.
+
+See the [document workflow guide](skills/ciphrix/references/document-workflows.md) for recovery,
+confirmation/retry boundaries and result interpretation. Use installed `--help` for exact options.
 
 ## Built for agent workspaces
 

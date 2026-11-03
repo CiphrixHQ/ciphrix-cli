@@ -12,10 +12,10 @@ We use a simple trunk-based model:
 - Every change lands through a **short-lived pull request branch**.
 - Branch names: `feat/<name>`, `fix/<name>`, `docs/<name>`, `chore/<name>`.
 - **CI and one approval are required** before merging to `main`.
-- Public releases are **tagged from `main`** (for example `v0.1.0`).
+- A version-changing merge to `main` invokes the protected npm release and creates its version tag.
 
 GitHub enforces what it can: `main` is protected, pull requests and passing CI are required, direct pushes
-are blocked, and releases are published from tags on `main`. The naming convention and the "keep branches
+are blocked, and release commits must be reachable from `main`. The naming convention and the "keep branches
 short-lived" rule are team practice, described here rather than enforced by CI.
 
 ## Local setup
@@ -51,6 +51,10 @@ the local Semgrep rules flag dynamic JavaScript evaluation and untrusted input r
 These checks use no paid GitHub security features or hosted scanning service.
 
 ## Commits and pull requests
+
+For capability/command changes, follow the [document workflow guide](skills/ciphrix/references/document-workflows.md)
+where applicable and keep the public skill and generated command reference aligned. For version bumps
+and production publication, follow [Releasing the CLI](docs/releasing.md).
 
 - Use clear, imperative commit messages (for example `feat: add tools list command`).
 - Keep pull requests focused on one change; explain the why, not just the what.

@@ -150,6 +150,9 @@ assignment. Unsent same-recipient selection reports already set. Read again betw
 use a separate write key per operation. Employees may be assigned and complete decisions in the app;
 user discovery does not grant tool access. Use exact active User IDs/emails, not People IDs or fuzzy
 name matches. Workflow readiness is business guidance, not permission or proof of notification delivery.
+Before coordinating a document request or recovery, read
+[the workflow guide](references/document-workflows.md) for stage-specific sequencing and result handling;
+use installed help or [the generated reference](references/commands.md) for exact syntax.
 
 **Context and onboarding.** Read the server status and question schema, then save only facts agreed
 with the user. Business and Operating Context are separate. Let the server decide readiness; initial
