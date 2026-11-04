@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Restore the existing tag-triggered release workflow and correct release guidance. Version-changing
+  merges to `main` do not publish; production releases require the matching version tag.
+
 ## [0.3.0] - 2026-11-03
 
 ### Added
@@ -24,8 +29,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- Version-changing merges to `main` now invoke the protected production npm release workflow and
-  create the matching GitHub release/tag after publication. Unchanged versions do not publish.
 - Add document workflow examples and an agent guide for explicit decisions, recipient recovery,
   confirmation, retries and result interpretation.
 

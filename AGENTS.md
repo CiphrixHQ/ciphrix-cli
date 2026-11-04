@@ -89,7 +89,7 @@ All items are required before changing repository visibility or publishing a rel
 
 - **Document workflows:** read [skills/ciphrix/references/document-workflows.md](skills/ciphrix/references/document-workflows.md) before changing workflow commands, recipient selectors, recovery guidance or document examples. Keep bindings manifest-owned and existing submit/approve grammar and successful JSON compatible.
 - **Agent guidance:** read [skills/ciphrix/SKILL.md](skills/ciphrix/SKILL.md) before changing user-facing workflow semantics; it owns the public decision/authority guidance. Generate exact syntax through `npm run commands:generate`, then verify `npm run commands:check`.
-- **Releases:** read [docs/releasing.md](docs/releasing.md) before changing package versions, changelog release headings or publication workflows. Version-changing merges to `main` invoke the protected npm release; do not push a release tag from a PR branch.
+- **Releases:** read [docs/releasing.md](docs/releasing.md) before changing package versions, changelog release headings or publication workflows. Releases use version tags on commits reachable from `main`; a version bump alone does not publish. Preserve the tag-based workflow and environment protections.
 
 ## Architecture rules
 

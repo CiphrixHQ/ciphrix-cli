@@ -1,8 +1,8 @@
 # Releasing the CLI
 
-The production npm release is owned by `.github/workflows/release.yml`. A version-changing merge to
-`main` invokes it; a normal documentation-only merge with unchanged package version does not publish.
-The protected `npm` environment can require approval before publication.
+The production npm release is owned by `.github/workflows/release.yml` and runs on `v*` tag pushes.
+A merge to `main`, including a version bump, does not publish. The protected `npm` environment
+restricts eligible release refs and can require approval before publication.
 
 ## Prepare the pull request
 
@@ -17,22 +17,22 @@ The protected `npm` environment can require approval before publication.
    grammar, authority boundaries or output behavior changes.
 4. Run `npm run ci`, the dependency/security gates in `AGENTS.md`, and inspect the package contents.
    Keep customer data, private endpoints and operational evidence out of the public repository.
-5. Obtain review and merge to `main`. The release workflow compares the new package version with the
-   previous `main` version, validates the matching lockfile and changelog, and runs the release checks.
+5. Obtain review and merge to `main`. After verifying the intended merged commit and obtaining explicit
+   release authorization, create and push its matching `v<version>` tag. Do not create a release tag
+   on the unmerged PR branch or change the workflow/environment restrictions to bypass this step.
 
 ## Publication
 
 The workflow verifies the release commit is reachable from `main`, rebuilds/tests the package and
 publishes `@ciphrix/cli` to the default production npm registry with provenance. It then creates the
-matching `v<version>` GitHub release/tag at that commit. No separate manual tag push is needed.
+GitHub release for the triggering version tag.
 
-Existing `v*` tag pushes remain an explicit release entry point; they must match the package version
-and point to a commit reachable from `main`. Do not use both paths for the same version. A publication
+The tag must match the package version and point to a commit reachable from `main`. A publication
 failure requires inspection of npm and GitHub release state before retrying; package versions cannot
 be overwritten. A failure after npm publication is not permission to publish different bytes under
 the same version.
 
 For an existing package, npm trusted publishing must authorize this repository, `release.yml` and the
 `npm` environment; GitHub OIDC supplies the credential. Only first-package bootstrap uses `NPM_TOKEN`.
-See [repository settings](repository-settings.md) for the required configuration. Merging schedules
-the workflow, but cannot guarantee publication when environment approval or publisher setup is missing.
+See [repository settings](repository-settings.md) for the required configuration. A tag push invokes
+the workflow, but publication still requires environment approval and valid publisher setup.

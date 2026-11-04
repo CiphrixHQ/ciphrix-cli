@@ -12,7 +12,7 @@ We use a simple trunk-based model:
 - Every change lands through a **short-lived pull request branch**.
 - Branch names: `feat/<name>`, `fix/<name>`, `docs/<name>`, `chore/<name>`.
 - **CI and one approval are required** before merging to `main`.
-- A version-changing merge to `main` invokes the protected npm release and creates its version tag.
+- Public releases are **tagged from `main`** (for example `v0.3.0`); a version bump alone does not publish.
 
 GitHub enforces what it can: `main` is protected, pull requests and passing CI are required, direct pushes
 are blocked, and release commits must be reachable from `main`. The naming convention and the "keep branches
