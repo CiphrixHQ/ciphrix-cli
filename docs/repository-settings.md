@@ -23,9 +23,9 @@ public (and verify after any settings change).
 
 ## Releases
 
-- Version-changing merges to `main` invoke the `Release` workflow, which publishes with provenance and
-  creates the matching GitHub release/tag. Existing tag-triggered releases must also be reachable from
-  `main`. See [Releasing the CLI](releasing.md) for version/changelog preparation and retry boundaries.
+- Publish releases from version tags on commits reachable from `main`. The `Release` workflow publishes
+  with provenance and creates the GitHub release. A merge or version bump alone does not publish.
+  See [Releasing the CLI](releasing.md) for version/changelog preparation and retry boundaries.
 - Configure npm trusted publishing for package `@ciphrix/cli` using GitHub Actions with organization
   `CiphrixHQ`, repository `ciphrix-cli`, workflow filename `release.yml`, and environment `npm`. The
   release workflow uses GitHub OIDC and publishes directly with `npm publish --access public`; enable

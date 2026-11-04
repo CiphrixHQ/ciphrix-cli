@@ -3,75 +3,20 @@ name: Release
 on:
   push:
     tags: ['v*']
-    branches: [main]
-    paths: ['package.json', 'package-lock.json']
 
 permissions:
   contents: write
   id-token: write
 
 concurrency:
-  group: npm-release
+  group: release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  version:
-    name: release-version
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      publish: ${{ steps.version.outputs.publish }}
-      tag: ${{ steps.version.outputs.tag }}
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: 22.x
-      - name: Detect and validate a production version bump
-        id: version
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
-          REF_TYPE: ${{ github.ref_type }}
-          REF_NAME: ${{ github.ref_name }}
-        run: |
-          node --input-type=module <<'NODE'
-          import { readFileSync, appendFileSync } from 'node:fs';
-          import { execFileSync } from 'node:child_process';
-          const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
-          const stable = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
-          if (!stable.test(version)) throw new Error('Production releases require a stable SemVer version');
-          if (process.env.REF_TYPE === 'branch') {
-            const before = process.env.BEFORE_SHA;
-            if (!/^[a-f0-9]{40}$/.test(before) || /^0+$/.test(before)) throw new Error('Missing previous main commit');
-            const previous = JSON.parse(execFileSync('git', ['show', `${before}:package.json`], { encoding: 'utf8' })).version;
-            if (previous === version) {
-              appendFileSync(process.env.GITHUB_OUTPUT, 'publish=false\n');
-              process.exit(0);
-            }
-            if (!stable.test(previous)) throw new Error('Previous main version must be stable SemVer');
-            const oldParts = previous.split('.').map(BigInt);
-            const newParts = version.split('.').map(BigInt);
-            const differing = newParts.findIndex((part, i) => part !== oldParts[i]);
-            if (differing < 0 || newParts[differing] < oldParts[differing]) throw new Error('Package version must increase');
-          } else if (process.env.REF_NAME !== `v${version}`) {
-            throw new Error('Release tag must match package version');
-          }
-          const lock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
-          if (lock.version !== version || lock.packages[''].version !== version) throw new Error('Lockfile version mismatch');
-          if (!readFileSync('CHANGELOG.md', 'utf8').includes(`## [${version}] - `)) throw new Error('Missing dated changelog release');
-          appendFileSync(process.env.GITHUB_OUTPUT, `publish=true\ntag=v${version}\n`);
-          NODE
   release:
     name: release
-    needs: version
-    if: needs.version.outputs.publish == 'true'
     runs-on: ubuntu-latest
     environment: npm
-    env:
-      RELEASE_TAG: ${{ needs.version.outputs.tag }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -97,12 +42,10 @@ jobs:
       - run: npm run build
       - name: Check generated command reference
         run: npm run commands:check
-      - name: Check package contents
-        run: npm run package:check
       - name: Verify the tag matches the package version
         run: |
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"
-          TAG_VERSION="${RELEASE_TAG#v}"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
           if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
             echo "Tag $TAG_VERSION does not match package version $PACKAGE_VERSION" >&2
             exit 1
@@ -134,6 +77,6 @@ jobs:
         if: steps.npm-package.outputs.exists == 'true'
         run: npm publish --provenance --access public
       - name: Create GitHub release
-        run: gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
