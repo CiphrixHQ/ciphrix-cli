@@ -7,6 +7,33 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-03
+
+### Added
+
+- Document workflow configuration, reviewer/approver assignment, review decisions, approval requests,
+  request recall, explicit self-approval and return-to-draft commands, plus generic active-user discovery.
+- Sent-recipient changes report the current stage and explicit recall/configure/resend steps, including
+  same-recipient requests. No recovery or formal decision is performed automatically.
+
+### Compatibility
+
+- New commands require matching server capabilities and return complete JSON envelopes. Existing
+  `document submit` and `document approve` spellings, options and successful JSON remain unchanged.
+- New immediate writes reject `--yes`; confirmed writes require it in JSON/noninteractive mode.
+
+### Changed
+
+- Version-changing merges to `main` now invoke the protected production npm release workflow and
+  create the matching GitHub release/tag after publication. Unchanged versions do not publish.
+- Add document workflow examples and an agent guide for explicit decisions, recipient recovery,
+  confirmation, retries and result interpretation.
+
+### Security
+
+- Refresh the existing test-tool dependency lockfile to clear the high-severity Vite advisory; no new
+  runtime dependencies are added.
+
 ## [0.2.0] - 2026-10-19
 
 ### Added

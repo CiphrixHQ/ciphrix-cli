@@ -218,6 +218,8 @@ describe('capability grammar and manifest-owned dispatch', () => {
       for (const name of spec.argument?.split(' ') ?? []) expected[name] = `${name}-fixture`;
       for (const field of spec.fields.filter((field) => field.kind !== 'clear')) {
         let value = 'synthetic';
+        if (spec.inputAdapter === 'documentWorkflow' && field.field === 'user')
+          value = 'employee@example.com';
         if (field.kind === 'integer') value = '2';
         if (field.kind === 'json') value = '"replacement"';
         if (field.kind === 'file') {
@@ -240,6 +242,11 @@ describe('capability grammar and manifest-owned dispatch', () => {
                     : value;
       }
       if (spec.path === 'access entry bulk-update') expected.operation = 'update';
+      if (spec.inputAdapter === 'documentWorkflow') {
+        delete expected.document;
+        expected.name = 'document-fixture';
+        if (expected.user) expected.user = { email: 'employee@example.com' };
+      }
       await test.program.parseAsync([...args, '--json'], { from: 'user' });
       expect(test.calls).toHaveLength(1);
       expect(test.calls[0]![0]).toBe(`${apiUrl}/tools/v1/fixture_operation`);

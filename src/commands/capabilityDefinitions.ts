@@ -10,6 +10,7 @@ export interface Capability {
   path: string;
   description: string;
   argument?: string;
+  inputAdapter?: 'documentWorkflow';
   fields: Field[];
   next: string;
 }
@@ -96,6 +97,78 @@ const filters = () => [
 ];
 
 export const capabilities: Capability[] = [
+  ...[
+    ['document workflow set', 'Set workflow type in draft.', 'workflowType'],
+    ['document reviewer set', 'Set reviewer; sent requests must be recalled first.', 'user'],
+    ['document reviewer remove', 'Remove the reviewer from a draft.'],
+    ['document approver set', 'Set approver; sent requests must be recalled first.', 'user'],
+    ['document approver remove', 'Remove approver; sent requests must be recalled first.'],
+    [
+      'document review complete',
+      'Record an explicitly authorized review decision; does not send approval.',
+    ],
+    ['document review send-back', 'Record an explicit negative review decision; clears reviewer.'],
+    [
+      'document review cancel',
+      'Recall review request; clears reviewer. Configure and resend separately.',
+    ],
+    [
+      'document approval send',
+      'Send for approval after review; never completes review implicitly.',
+    ],
+    [
+      'document approval send-back',
+      'Record an explicit negative approval decision; clears approver.',
+    ],
+    [
+      'document approval cancel',
+      'Recall approval request; clears approver. Configure and resend separately.',
+    ],
+    [
+      'document approval self-approve',
+      'Explicit self-approval, separate from ordinary approve; no review bypass.',
+    ],
+    [
+      'document workflow return-to-draft',
+      'Return eligible advanced approval-stage document to draft; clears assignments.',
+    ],
+  ].map(([path, description, input]): Capability => ({
+    path: path!,
+    description: description!,
+    argument: 'document',
+    inputAdapter: 'documentWorkflow',
+    fields:
+      input === 'workflowType'
+        ? [field('type', 'workflowType', 'text', true, 'workflow type: simple or advanced')]
+        : input === 'user'
+          ? [
+              field(
+                'user',
+                'user',
+                'text',
+                true,
+                'exact active user email or User ID; employees may be assigned',
+              ),
+            ]
+          : [],
+    next: 'document get',
+  })),
+  spec(
+    'user list',
+    'List active tenant users, including employees; discovery does not change accounts.',
+    undefined,
+    [
+      field(
+        'search',
+        'search',
+        'text',
+        false,
+        'optional name/email search, at least three characters',
+      ),
+      ...page(),
+    ],
+    'document reviewer set',
+  ),
   spec(
     'access resource list',
     'List review inventory resources and owners.',

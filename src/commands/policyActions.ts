@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { applyTool } from '../actions.js';
 import type { CredentialStore } from '../credentials.js';
+import { getManifest, resolveBinding } from '../manifest.js';
 import { writeLine, writeTable, type CliIO } from '../io.js';
 import { asRecord, asText, callTool, errorMessage, resolveToolContext } from '../toolSurface.js';
 
@@ -25,6 +26,24 @@ const num = (value: unknown, fallback: string): string =>
 
 const target = (policy: string): Record<string, unknown> =>
   UUID.test(policy) ? { policyId: policy } : { name: policy };
+
+// Retain the original named calls only for older manifests without these bindings.
+const documentWriteName = async (
+  ctx: Awaited<ReturnType<typeof resolveToolContext>>,
+  operation: 'submit' | 'approve',
+): Promise<string> => {
+  const manifest = await getManifest(ctx);
+  if (
+    manifest.some(
+      (tool) =>
+        tool.cli?.operation === operation &&
+        JSON.stringify(tool.cli.group) === JSON.stringify(['document']),
+    )
+  ) {
+    return (await resolveBinding(ctx, ['document'], operation)).name;
+  }
+  return operation === 'submit' ? 'submit_document' : 'approve_document';
+};
 
 const renderResult = (io: CliIO, json: boolean, result: Record<string, unknown>): void => {
   if (json) {
@@ -144,7 +163,7 @@ export const policySubmitCommand = async (options: PolicyTargetOptions): Promise
   const result = await applyTool({
     ctx,
     io,
-    toolName: 'submit_document',
+    toolName: await documentWriteName(ctx, 'submit'),
     input: target(policy),
     fallback: 'Could not submit the document for review.',
     yes,
@@ -159,7 +178,7 @@ export const policyApproveCommand = async (options: PolicyTargetOptions): Promis
   const result = await applyTool({
     ctx,
     io,
-    toolName: 'approve_document',
+    toolName: await documentWriteName(ctx, 'approve'),
     input: target(policy),
     fallback: 'Could not approve the document.',
     yes,

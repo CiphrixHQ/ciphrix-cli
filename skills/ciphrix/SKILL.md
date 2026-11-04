@@ -83,8 +83,9 @@ Two consequences worth internalising:
   addressed by their human name **or** their stable code (for example `ACME-DOC-A1B2`, `TSQ-001`,
   `ACME-RSK-CQJ4`, `ACME-AST-M5SD`). Ids work but are never required, and you never invent one. Prefer the
   code when a name is ambiguous.
-- **Intents, not steps.** Ask for the outcome; don't orchestrate the underlying calls. One user-facing
-  request may be several platform operations — that composition is the CLI's job, not the user's.
+- **Intents, not hidden decisions.** An agent may coordinate explicitly authorized platform operations
+  for one user request. Each operation remains separate: stop on errors or uncertain outcomes and never
+  infer a formal decision merely because it would let the next step proceed.
 - **Ask only for decisions.** Only actions that change something a person should review stop for
   confirmation — deleting, editing content, linking, or changing a control, clause, test or asset. A
   formal decision is its own verb (`approve`, `submit`, `test run result`) and applies directly. Everything
@@ -139,6 +140,19 @@ are what a check raised. `check disable` silences a check for the tenant — rec
 **Check on background work.** Anything that returns a job id is polled, not awaited.
 
 ## Guardrails
+
+**Document workflow.** Configuration, request sending, review completion, ordinary approval and
+self-approval are separate intents. Sending for approval never authorizes completing review first.
+When a recipient setter reports an already-sent request, explain the current stage and offer recall,
+configure and resend, even if the requested recipient is unchanged. Proceed only with authorization;
+recall clears the recipient, so set them again before resending rather than removing an already-cleared
+assignment. Unsent same-recipient selection reports already set. Read again between recovery steps and
+use a separate write key per operation. Employees may be assigned and complete decisions in the app;
+user discovery does not grant tool access. Use exact active User IDs/emails, not People IDs or fuzzy
+name matches. Workflow readiness is business guidance, not permission or proof of notification delivery.
+Before coordinating a document request or recovery, read
+[the workflow guide](references/document-workflows.md) for stage-specific sequencing and result handling;
+use installed help or [the generated reference](references/commands.md) for exact syntax.
 
 **Context and onboarding.** Read the server status and question schema, then save only facts agreed
 with the user. Business and Operating Context are separate. Let the server decide readiness; initial
